@@ -43,7 +43,7 @@ function gc_assess_arc_enqueue_scripts() {
           $data_for_js = array_merge($data_for_js,$other_data);
           
         // pass exemplars, scenarios, and competencies to Judgment App
-          wp_localize_script('gcaa-main-js', 'exObj', $data_for_js);
+          wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
 
       } else {
           echo "please log in";
@@ -73,35 +73,32 @@ function arc_comp_query_vars( $qvars ) {
     $qvars[] = 'comp_num';
     return $qvars;
 }
-add_filter( 'query_vars', 'comp_query_vars' );
+add_filter( 'query_vars', 'arc_comp_query_vars' );
 
 // Add task_num to url
 function arc_task_query_vars( $qvars ) {
     $qvars[] = 'task_num';
     return $qvars;
 }
-add_filter( 'query_vars', 'task_query_vars' );
+add_filter( 'query_vars', 'arc_task_query_vars' );
 
-// Genesis activation hook - if statement in function has it run only on a given page
-add_action('wp_ajax_save_data','save_data');
+// Genesis activation hook
+add_action('wp_ajax_arc_save_data','arc_save_data');
 /*
- * Calls the insert function from the class judg_db to insert exemplar data into the table
+ * Calls the insert function from the class arc_judg_db to insert response data into the table
  */
 function arc_save_data() {
-    check_ajax_referer('gcaa_scores_nonce');
+    //check_ajax_referer('gcaa_scores_nonce');
     global $current_user;
     $db = new arc_judg_db;
     // Get data from React components
-    $trial_num = $_POST['trial_num'];
+    $sub_num = $_POST['sub_num'];
     $comp_num = $_POST['comp_num'];
     $task_num = $_POST['task_num'];
-    $ex_id = $_POST['ex_id'];
-    $learner_level = $_POST['learner_level'];
-    $gold_level = $_POST['gold_level'];
-    $judg_corr = $_POST['judg_corr'];
+    $resp_id = $_POST['resp_id'];
+    $judg_level = $_POST['judg_level'];
     $judg_time = $_POST['judg_time'];
-    $learner_rationale = $_POST['learner_rationale'];
-    $ration_match = $_POST['ration_match'];
+    $rationale = $_POST['rationale'];
     $ration_time = $_POST['ration_time'];
 
     if($judg_time>=60) {
@@ -112,17 +109,14 @@ function arc_save_data() {
     }
 
     $db_data = array(
-        'learner_id' => $current_user->ID,
-        'trial_num' => $trial_num,
+        'user_id' => $current_user->ID,
+        'sub_num' => $sub_num,
         'comp_num' => $comp_num,
         'task_num' => $task_num,
-        'ex_title' => get_the_title($ex_id),
-        'learner_level' => $learner_level,
-        'gold_level' => $gold_level,
-        'judg_corr' => $judg_corr,
+        'resp_title' => get_the_title($resp_id),
+        'judg_level' => $judg_level,
         'judg_time'  => $judg_time,
-        'learner_rationale' => $learner_rationale,
-        'ration_match' => $ration_match,
+        'rationale' => $rationale,
         'ration_time' => $ration_time
     );
     $db->insert($db_data);

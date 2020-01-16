@@ -5,8 +5,8 @@
 global $db_version;
 $db_version = '1.0';
 
-global $table_postfix;
-$table_postfix = 'gc_indep_judgments';
+global $arc_table_postfix;
+$arc_table_postfix = 'gc_indep_judgments';
 
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
@@ -15,14 +15,14 @@ $table_postfix = 'gc_indep_judgments';
 function gcaa_create_table() {
     global $wpdb;
     global $db_version;
-    global $table_postfix;
+    global $arc_table_postfix;
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-    $table_name = $wpdb->prefix . $table_postfix;
+    $arc_table_name = $wpdb->prefix . $arc_table_postfix;
 
     $charset_collate = $wpdb->get_charset_collate();
 
-    $sql = "CREATE TABLE $table_name (
+    $sql = "CREATE TABLE $arc_table_name (
         judg_id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id mediumint(9) UNSIGNED NOT NULL,
         sub_num smallint(5) UNSIGNED NOT NULL,
@@ -38,7 +38,7 @@ function gcaa_create_table() {
 
     dbDelta($sql);
     $success = empty( $wpdb->last_error );
-    update_option($table_name . '_db_version',$db_version);
+    update_option($arc_table_name . '_db_version',$db_version);
     return $success;
 }
 
@@ -48,14 +48,9 @@ function gcaa_create_table() {
 function arc_pull_data_cpts($comp_num, $task_num) {
     global $current_user;
 
-    $percent_correct = get_user_meta( $current_user->ID, 'percent_correct', true);
-    if ( $percent_correct == null ) {
-        $percent_correct = 0;
-    }
-
-    $ex_args = array(
+    $resp_args = array(
         'numberposts' => -1,
-        'post_type' => 'exemplar',
+        'post_type' => 'response',
         'meta_query' => array(
             'relation' => 'AND',
             array(
@@ -71,14 +66,13 @@ function arc_pull_data_cpts($comp_num, $task_num) {
         )
     );
 
-    $exemplars = get_posts($ex_args);
-    shuffle($exemplars);
-    foreach ($exemplars as $exemplar) {
-        $ex_id = $exemplar->ID;
-        $ex_ids[] = $ex_id;
-        $ex_contents[$ex_id] = trim($exemplar->post_content, '""');
-        $exemplar_gold_levels[$ex_id] = get_field("gold_level", $ex_id, false);
-        $ex_gold_rationales[$ex_id] = get_field("gold_rationale",$ex_id);
+    $responses = get_posts($resp_args);
+    shuffle($responses);
+    foreach ($responses as $response) {
+        $resp_id = $response->ID;
+        $resp_ids[] = $resp_id;
+        $sub_nums[] = get_field('sub_num', $resp_id);
+        $resp_contents[$resp_id] = trim($response->post_content, '""');
     }
 
     $s_args = array(
@@ -111,11 +105,9 @@ function arc_pull_data_cpts($comp_num, $task_num) {
         'sTitle' => $s_title,
         'cDefinitions' => $c_defs,
         'cTitles' => $c_titles,
-        'exIds' => $ex_ids,
-        'exemplars' => $ex_contents,
-        'exGoldLevels' => $exemplar_gold_levels,
-        'exGoldRationales' => $ex_gold_rationales,
-        'percent_correct' => $percent_correct,
+        'respIds' => $resp_ids,
+        'responses' => $resp_contents,
+        'subNums' => $sub_nums
     );
 
     return $data_for_js;
@@ -133,8 +125,8 @@ class arc_judg_db {
      */
     private static function _table() {
         global $wpdb;
-        global $table_postfix;
-        return $wpdb->prefix . $table_postfix;
+        global $arc_table_postfix;
+        return $wpdb->prefix . $arc_table_postfix;
     }
 
     /*
@@ -147,6 +139,13 @@ class arc_judg_db {
     }
 
     // Public methods
+    /*
+     * Returns the table name
+     */
+    static function get_name() {
+        return self::_table();
+    }
+
     /*
      * Returns the row with the given key
      */
