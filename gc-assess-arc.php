@@ -88,7 +88,7 @@ add_action('wp_ajax_arc_save_data','arc_save_data');
  * Calls the insert function from the class arc_judg_db to insert response data into the table
  */
 function arc_save_data() {
-    //check_ajax_referer('gcaa_scores_nonce');
+    check_ajax_referer('gcaa_scores_nonce');
     global $current_user;
     $db = new arc_judg_db;
     // Get data from React components

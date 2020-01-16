@@ -168,7 +168,7 @@ class JudgmentApp extends Component {
                         competencies={respObj.cDefinitions}
                         levelTitles={this.levelTitles}
                         sTitle={respObj.sTitle}
-                        cTitle={respObj.cTitles[4]}
+                        cTitle={respObj.cTitles[0]}
                     />
                 }
                 { !this.state.allDone &&

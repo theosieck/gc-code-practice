@@ -42,7 +42,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {props.competencies[4]}
+                        {props.competencies[0]}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>
