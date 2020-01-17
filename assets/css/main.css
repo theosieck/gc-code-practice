@@ -1,2 +1,7 @@
 body {
-  background: #ddd; }
+  background: #ddd;
+}
+
+::placeholder {
+  color: gray;
+}

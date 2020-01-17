@@ -33,19 +33,16 @@ class Rationale extends Component {
         return (
             <div id="rationale">
                 {this.state.error && <p>{this.state.error}</p>}
-                {!this.state.formSubmitted && 
-                    <form onSubmit={this.handleRationaleObj}>
-                        <span>Please explain the judgment for this response:</span>
-                        <textarea name="rationale" cols={40} rows={5} maxLength={1000} required placeholder={"125 words or less"} />
-                        <br />
-                        <br />
-                        <Options 
-                            handleChoice={this.props.handleChoice}
-                            levelTitles={this.props.levelTitles}
-                        />
-                    </form>
-                }
-                {this.state.formSubmitted && <button onClick={this.handleNextHere}>Next</button>}
+                <form onSubmit={this.handleRationaleObj}>
+                    <span>Provide your analysis of the case and select a level to enter your assessment.</span>
+                    <textarea name="rationale" cols={40} rows={5} maxLength={1000} required placeholder={"125 words or less"} />
+                    <br />
+                    <br />
+                    <Options 
+                        handleChoice={this.props.handleChoice}
+                        levelTitles={this.props.levelTitles}
+                    />
+                </form>
             </div>
         );
     }

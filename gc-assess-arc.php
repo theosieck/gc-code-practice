@@ -35,13 +35,18 @@ function gc_assess_arc_enqueue_scripts() {
           
           $comp_num = sanitize_text_field(get_query_var('comp_num'));
           $task_num = sanitize_text_field(get_query_var('task_num'));
-          $data_for_js = arc_pull_data_cpts($comp_num,$task_num);
+          $review = sanitize_text_field(get_query_var('review'));;
+          if($review == 'true') {
+            $data_for_js = arc_pull_review_data_cpts($comp_num,$task_num);
+          } else {
+            $data_for_js = arc_pull_data_cpts($comp_num,$task_num);
+          }
           $other_data = array(
               'compNum' => $comp_num,
-              'taskNum' => $task_num
+              'taskNum' => $task_num,
+              'review' => $review
             );
           $data_for_js = array_merge($data_for_js,$other_data);
-          
         // pass exemplars, scenarios, and competencies to Judgment App
           wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
 
@@ -82,6 +87,13 @@ function arc_task_query_vars( $qvars ) {
 }
 add_filter( 'query_vars', 'arc_task_query_vars' );
 
+// Add review to url
+function arc_review_query_vars( $qvars ) {
+    $qvars[] = 'review';
+    return $qvars;
+}
+add_filter( 'query_vars', 'arc_review_query_vars' );
+
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
 /*
@@ -96,10 +108,10 @@ function arc_save_data() {
     $comp_num = $_POST['comp_num'];
     $task_num = $_POST['task_num'];
     $resp_id = $_POST['resp_id'];
+    $judg_type = $_POST['judg_type'];
     $judg_level = $_POST['judg_level'];
     $judg_time = $_POST['judg_time'];
     $rationale = $_POST['rationale'];
-    $ration_time = $_POST['ration_time'];
 
     if($judg_time>=60) {
         $judg_time = date("H:i:s", mktime(0, 0, $judg_time));
@@ -114,10 +126,10 @@ function arc_save_data() {
         'comp_num' => $comp_num,
         'task_num' => $task_num,
         'resp_title' => get_the_title($resp_id),
+        'judg_type' => $judg_type,
         'judg_level' => $judg_level,
         'judg_time'  => $judg_time,
-        'rationale' => $rationale,
-        'ration_time' => $ration_time
+        'rationale' => $rationale
     );
     $db->insert($db_data);
 }

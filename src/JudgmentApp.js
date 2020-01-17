@@ -6,7 +6,9 @@ const { Component } = wp.element;
 import PresentContext from './PresentContext';
 import PresentResp from './PresentResp';
 import Rationale from './Rationale';
+import Confirm from './Confirm';
 import ShowEnd from './ShowEnd';
+import ShowReview from './ShowReview';
 
 const nTrials = respObj.respIds.length;
 
@@ -20,9 +22,9 @@ class JudgmentApp extends Component {
         choiceNum: 0,   // Number of the user's judgment
         startTime: Math.floor(this.startDate / 1000),    // UNIX time on page load, in seconds
         judgTime: 0,    // Time from page load to judgment made, in seconds
-        rationTime: 0,  // Time from judgment made to rationale submitted, in seconds
         allDone: false, // Whether the 'ShowEnd' component should be displayed
-        rationale: null // The user's rationale for the current trial
+        rationale: null, // The user's rationale for the current trial
+        conVisible: false   // Whether the component 'Confirm' should be displayed
     };
     // Labels for Response judgments
     levelTitles = {
@@ -32,7 +34,7 @@ class JudgmentApp extends Component {
     };
 
     /**
-     * handleChoice: calculates judg_time and correct, updates state
+     * handleChoice: calculates judg_time, updates state
      * Parameters: optionNum, the numerical value of the judgment; option, the text value
      * Fires: when the user clicks a 'judgment' button
      */
@@ -48,6 +50,11 @@ class JudgmentApp extends Component {
             choiceNum: optionNum,
             judgTime: judgTime
         }));
+        if(respObj.review == 'true') {
+            this.setState(() => ({
+                conVisible: true
+            }));
+        }
     }
 
     handleRationale = (rationale) => {
@@ -59,34 +66,14 @@ class JudgmentApp extends Component {
         if (wordRat.length > 125) {
             return "Trim your rationale down to 125 words";
         }
-        this.setState(() => ({rationale}));
+        this.setState(() => ({
+            rationale: rationale,
+            conVisible: true
+        }));
     }
-    
-    /**
-     * handleNext: checks whether the user is finished with the current set, saves the current line to
-     *      the database, and sets the new startTime
-     * Parameters: none
-     * Fires: when the user clicks the 'Next' button
-     */
-    handleNext = () => {
-        // Check whether the user has finished all the trials
-        if (this.state.trial < nTrials) {
-            this.setState((prevState) => ({
-                trial: prevState.trial + 1,
-            }),
-            this.getCase
-            );
-        } else {
-            this.setState(() => ({
-                allDone: true
-            }));
-        }
 
-        // Calculate time from task load to option selected
-        // const endDate = Date.now();
-        // const endTime = Math.floor(endDate / 1000);
-        // const judgTime = endTime - this.state.startTime;
-
+    handleRevise = () => {
+        this.setState(() => ({conVisible:false}));
         // Save to DB
         jQuery.ajax({
             url : respObj.ajax_url,
@@ -97,10 +84,10 @@ class JudgmentApp extends Component {
                 comp_num: respObj.compNum,
                 task_num: respObj.taskNum,
                 resp_id: this.state.respId,
+                judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
                 judg_level: this.state.choiceNum,
                 judg_time: this.state.judgTime,
                 rationale: this.state.rationale,
-                ration_time: this.state.rationTime,
                 _ajax_nonce: respObj.nonce
             },
             success : function( response ) {
@@ -115,7 +102,57 @@ class JudgmentApp extends Component {
         const newStartTime = Math.floor(newStartDate / 1000);
         this.setState(() => ({startTime: newStartTime}));
     }
+    
+    /**
+     * handleNext: checks whether the user is finished with the current set, saves the current line to
+     *      the database, and sets the new startTime
+     * Parameters: none
+     * Fires: when the user clicks the 'Next' button
+     */
+    handleNext = () => {
+        // Check whether the user has finished all the trials
+        if (this.state.trial < nTrials) {
+            this.setState((prevState) => ({
+                trial: prevState.trial + 1,
+                conVisible: false
+            }),
+            this.getCase
+            );
+        } else {
+            this.setState(() => ({
+                allDone: true
+            }));
+        }
 
+        // Save to DB
+        jQuery.ajax({
+            url : respObj.ajax_url,
+            type : 'post',
+            data : {
+                action : 'arc_save_data',
+                sub_num: respObj.subNums[this.state.trial-1],
+                comp_num: respObj.compNum,
+                task_num: respObj.taskNum,
+                resp_id: this.state.respId,
+                judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+                judg_level: this.state.choiceNum,
+                judg_time: this.state.judgTime,
+                rationale: this.state.rationale,
+                _ajax_nonce: respObj.nonce
+            },
+            success : function( response ) {
+                    if( !response ) {
+                        alert( 'Something went wrong, try logging in!' );
+                    }
+                }
+        });
+
+        // Set new start time
+        const newStartDate = Date.now();
+        const newStartTime = Math.floor(newStartDate / 1000);
+        this.setState(() => ({startTime: newStartTime}));
+    }
+    
     /**
      * getCase: gets the new Response ID
      * Parameters: none
@@ -159,14 +196,31 @@ class JudgmentApp extends Component {
                     <PresentResp
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
-                    /> }
-                {!this.state.allDone &&
+                    />
+                }
+                {(!this.state.allDone && (respObj.review == 'true')) &&
+                    <ShowReview 
+                        subNum={respObj.subNums[this.state.trial-1]}
+                        reviewSet={respObj.reviewSet}
+                        handleChoice={this.handleChoice}
+                        levelTitles={this.levelTitles}
+                        conVisible={this.state.conVisible}
+                    />
+                }
+                {(!this.state.allDone && this.state.conVisible) &&
+                    <Confirm
+                        choice={this.state.choice}
+                        rationale={this.state.rationale}
+                        handleRevise={this.handleRevise}
+                        handleNext={this.handleNext}
+                        showRat={!(respObj.review == 'true')}
+                    />
+                }
+                {(!(respObj.review == 'true') && (!this.state.allDone && !this.state.conVisible)) &&
                     <Rationale
-                        choice={ this.state.choice }
                         levelTitles={this.levelTitles}
                         handleRationale={this.handleRationale}
                         handleChoice={this.handleChoice}
-                        handleNext={this.handleNext}
                     />
                 }
             </div>

@@ -6,7 +6,7 @@ global $db_version;
 $db_version = '1.0';
 
 global $arc_table_postfix;
-$arc_table_postfix = 'gc_indep_judgments';
+$arc_table_postfix = 'gc_apply_judgments';
 
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
@@ -29,10 +29,10 @@ function gcaa_create_table() {
 		comp_num smallint(2) UNSIGNED NOT NULL,
 		task_num smallint(2) UNSIGNED NOT NULL,
 		resp_title tinytext NOT NULL,
+        judg_type tinytext NOT NULL,
 		judg_level smallint(1) UNSIGNED NOT NULL,
 		judg_time time NOT NULL,
 	    rationale longtext NOT NULL,
-        ration_time time NOT NULL,
         PRIMARY KEY (judg_id)
 	) $charset_collate;";
 
@@ -114,6 +114,102 @@ function arc_pull_data_cpts($comp_num, $task_num) {
 }
 
 /*
+ * Pulls relevant data from the CPTs using given $comp_num and $task_num.
+ */
+function arc_pull_review_data_cpts($comp_num, $task_num) {
+    global $current_user;
+    global $wpdb;
+    $db = new arc_judg_db;
+    // get all the data for the given comp and task nums
+    $where = "comp_num = {$comp_num} AND task_num = {$task_num}";
+    $all_data = $db->get_all($where);
+    // organize the data into a 2d array where the key is the subject number and the value is an array
+    // of all the db lines for that subject
+    $all_subs = [];
+    foreach ($all_data as $sub) {
+        $all_subs[$sub->sub_num][] = $sub;
+    }
+    // filter the db lines so that the subjects that have not yet been reviewed and have more than one
+    // response are added to the review set
+    $review_set = [];
+    $review_titles = [];
+    foreach($all_subs as $sub) {
+        // each response will be judged by two people and then reviewed, so if there is only one line
+        // in the db then it is not ready for review yet and if there are 3 lines then it has already
+        // been reviewed.
+        if(count($sub)==2) {
+            // only add to the set the pairs of judg_levels that are different
+            if($sub[0]->judg_level != $sub[1]->judg_level) {
+                $sub_num = $sub[0]->sub_num;
+                $review_set[$sub_num] = array(
+                    'sub_num' => $sub_num,
+                    'judg_level_1' => $sub[0]->judg_level,
+                    'judg_level_2' => $sub[1]->judg_level,
+                    'rationale_1' => $sub[0]->rationale,
+                    'rationale_2' => $sub[1]->rationale
+                );
+                $response = get_page_by_title($sub[0]->resp_title, 'OBJECT', 'response');
+                $resp_id = $response->ID;
+                $resp_ids[] = $resp_id;
+                $sub_nums[] = $sub_num;
+                $resp_contents[$resp_id] = trim($response->post_content, '""');
+            } else {   
+                // add a 'rev' line to the db for this sub, since both judges agreed
+                $db_data = array(
+                    'user_id' => $sub[0]->user_id,
+                    'sub_num' => $sub[0]->sub_num,
+                    'comp_num' => $sub[0]->comp_num,
+                    'task_num' => $sub[0]->task_num,
+                    'resp_title' => $sub[0]->resp_title,
+                    'judg_type' => 'rev',
+                    'judg_level' => $sub[0]->judg_level,
+                    'judg_time'  => $sub[0]->judg_time,
+                    'rationale' => $sub[0]->rationale
+                );
+                $db->insert($db_data);
+            }
+        }
+    }
+
+    $s_args = array(
+        'post_type' => 'scenario',
+        'meta_key' => 'task_num',
+        'meta_value' => $task_num
+    );
+
+    $scenario = get_posts($s_args);
+    $s_content = trim($scenario[0]->post_content, '""');
+    $s_title = $scenario[0]->post_title;
+
+    $c_args = array(
+        'post_type' => 'competency',
+        'meta_key' => 'comp_num',
+        'meta_value' => $comp_num
+    );
+
+    $competencies = get_posts($c_args);
+    foreach ($competencies as $competency) {
+        $j = get_field('comp_part',$competency->ID);
+        $c_defs[$j] = trim($competency->post_content, '""');
+        $c_titles[$j] = $competency->post_title;
+    }
+
+    $data_for_js = array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('gcaa_scores_nonce'),
+        'sContent' => $s_content,
+        'sTitle' => $s_title,
+        'cDefinitions' => $c_defs,
+        'cTitles' => $c_titles,
+        'respIds' => $resp_ids,
+        'responses' => $resp_contents,
+        'subNums' => $sub_nums,
+        'reviewSet' => $review_set
+    );
+    return $data_for_js;
+}
+
+/*
  * The class which defines the generic functions for working with the database
  */
 class arc_judg_db {
@@ -189,6 +285,12 @@ class arc_judg_db {
         return $wpdb->get_results( $sql );
     }
 
+    static function get_all($where) {
+        global $wpdb;
+        $sql   = "SELECT * FROM " . self::_table() . " WHERE {$where}";
+        return $wpdb->get_results( $sql );
+    }
+
     /*
      * Returns an array of the columns and their formats
      */
@@ -200,10 +302,10 @@ class arc_judg_db {
             'comp_num' => '%d', 	
             'task_num' => '%d', 	
             'resp_title' => '%s',
+            'judg_type' => '%s',
             'judg_level' => '%d', 	
             'judg_time' => '%s', 	
-            'rationale' => '%s',
-            'ration_time' => '%s'
+            'rationale' => '%s'
         );
     }
 
