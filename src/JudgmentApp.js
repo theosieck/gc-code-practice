@@ -5,7 +5,6 @@ const { Component } = wp.element;
 //import './judgmentapp.scss';
 import PresentContext from './PresentContext';
 import PresentResp from './PresentResp';
-import Options from './Options';
 import Rationale from './Rationale';
 import ShowEnd from './ShowEnd';
 
@@ -22,9 +21,8 @@ class JudgmentApp extends Component {
         startTime: Math.floor(this.startDate / 1000),    // UNIX time on page load, in seconds
         judgTime: 0,    // Time from page load to judgment made, in seconds
         rationTime: 0,  // Time from judgment made to rationale submitted, in seconds
-        ratVisible: false,  // Whether the 'Rationale' component should be displayed
         allDone: false, // Whether the 'ShowEnd' component should be displayed
-        rationales: [] // An array of the user's rationales
+        rationale: null // The user's rationale for the current trial
     };
     // Labels for Response judgments
     levelTitles = {
@@ -48,17 +46,10 @@ class JudgmentApp extends Component {
         this.setState(() => ({
             choice: option,
             choiceNum: optionNum,
-            startTime: endTime,
-            judgTime: judgTime,
-            ratVisible: true
+            judgTime: judgTime
         }));
     }
 
-    /**
-     * handleRationale: verifies the rationale given by the user, calculates ration_time, and updates state.
-     * Parameter: rationale, the user-inputted rationale
-     * Fires: when 'Enter Rationale' is clicked
-     */
     handleRationale = (rationale) => {
         // Verify rationale
         if (!rationale) {
@@ -68,17 +59,7 @@ class JudgmentApp extends Component {
         if (wordRat.length > 125) {
             return "Trim your rationale down to 125 words";
         }
-
-        // Calculate time from task load to rationale submitted
-        const endDate = Date.now();
-        const endTime = Math.floor(endDate / 1000);
-        const rationTime = endTime - this.state.startTime;
-
-        // Update state
-        this.setState(prevState => ({
-            rationTime: rationTime,
-            rationales: prevState.rationales.concat(rationale)
-        }));
+        this.setState(() => ({rationale}));
     }
     
     /**
@@ -92,16 +73,19 @@ class JudgmentApp extends Component {
         if (this.state.trial < nTrials) {
             this.setState((prevState) => ({
                 trial: prevState.trial + 1,
-                ratVisible: false
             }),
             this.getCase
             );
         } else {
             this.setState(() => ({
-                allDone: true,
-                ratVisible: false
+                allDone: true
             }));
         }
+
+        // Calculate time from task load to option selected
+        // const endDate = Date.now();
+        // const endTime = Math.floor(endDate / 1000);
+        // const judgTime = endTime - this.state.startTime;
 
         // Save to DB
         jQuery.ajax({
@@ -115,7 +99,7 @@ class JudgmentApp extends Component {
                 resp_id: this.state.respId,
                 judg_level: this.state.choiceNum,
                 judg_time: this.state.judgTime,
-                rationale: this.state.rationales[this.state.trial-1],
+                rationale: this.state.rationale,
                 ration_time: this.state.rationTime,
                 _ajax_nonce: respObj.nonce
             },
@@ -176,17 +160,12 @@ class JudgmentApp extends Component {
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
                     /> }
-                { (!this.state.allDone && !this.state.ratVisible) &&
-                    <Options 
-                        handleChoice={this.handleChoice}
-                        levelTitles={this.levelTitles}
-                    />
-                }
-                {this.state.ratVisible &&
+                {!this.state.allDone &&
                     <Rationale
                         choice={ this.state.choice }
                         levelTitles={this.levelTitles}
                         handleRationale={this.handleRationale}
+                        handleChoice={this.handleChoice}
                         handleNext={this.handleNext}
                     />
                 }

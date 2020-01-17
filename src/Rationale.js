@@ -1,9 +1,10 @@
+import Options from './Options';
 const { Component } = wp.element;
 
 class Rationale extends Component {
     state = {
         error: undefined,
-        ratSubmitted: false
+        formSubmitted: false
     };
     /**
      * handleRationaleObj: cleans the user's rationale and updates state
@@ -14,35 +15,37 @@ class Rationale extends Component {
         // e is event object
         e.preventDefault();
 
-       const rationale = e.target.elements.rationale.value.trim();
-       const error = this.props.handleRationale(rationale);
+        const rationale = e.target.elements.rationale.value.trim();
+        const error = this.props.handleRationale(rationale);
 
         this.setState(() => ({
             error: error,
-            ratSubmitted: true
+            formSubmitted: true
         }));
     };
+
+    handleNextHere = () => {
+        this.setState(() => ({formSubmitted: false}));
+        this.props.handleNext();
+    }
 
     render() {
         return (
             <div id="rationale">
-                {!this.state.ratSubmitted &&
-                    <div>
-                        <p>You chose: <b>{this.props.choice}</b></p>
-                        {this.state.error && <p>{this.state.error}</p>}
-                        <form onSubmit={this.handleRationaleObj}>
-                            <span>Please explain why this response is <b>{this.props.choice}</b>:</span>
-                            <textarea name="rationale" cols={40} rows={5} maxLength={1000} required placeholder={"125 words or less"} />
-                            <button className="button">Enter Rationale</button>
-                        </form>
-                    </div>
+                {this.state.error && <p>{this.state.error}</p>}
+                {!this.state.formSubmitted && 
+                    <form onSubmit={this.handleRationaleObj}>
+                        <span>Please explain the judgment for this response:</span>
+                        <textarea name="rationale" cols={40} rows={5} maxLength={1000} required placeholder={"125 words or less"} />
+                        <br />
+                        <br />
+                        <Options 
+                            handleChoice={this.props.handleChoice}
+                            levelTitles={this.props.levelTitles}
+                        />
+                    </form>
                 }
-                {this.state.ratSubmitted &&
-                    <div>
-                        <p>Thank you!</p>
-                        <button onClick={this.props.handleNext}>Next</button>
-                    </div>
-                }
+                {this.state.formSubmitted && <button onClick={this.handleNextHere}>Next</button>}
             </div>
         );
     }
