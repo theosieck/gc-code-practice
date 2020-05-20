@@ -2,7 +2,7 @@
 const ShowEnd = () => (
     <div>
         <h4>You're all done!</h4>
-        <a href="http://dev.globalcognition.org/competency-assessment-home" className="button">Assessment Home</a>
+        <p>Close this tab to return to the Assessment Home.</p>
     </div>
 );
 
