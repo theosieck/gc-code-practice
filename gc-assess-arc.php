@@ -32,24 +32,33 @@ function gc_assess_arc_enqueue_scripts() {
               time(),
               true
           );
-          
+
+          $judge1 = sanitize_text_field(get_query_var('judge1'));
+          $judge2 = sanitize_text_field(get_query_var('judge2'));
           $comp_num = sanitize_text_field(get_query_var('comp_num'));
           $task_num = sanitize_text_field(get_query_var('task_num'));
+          $block_num = sanitize_text_field(get_query_var('block_num'));
           $review = sanitize_text_field(get_query_var('review'));;
           if($review == 'true') {
-            $data_for_js = arc_pull_review_data_cpts($comp_num,$task_num);
+            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num);
           } else {
-            $data_for_js = arc_pull_data_cpts($comp_num,$task_num);
+            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $block_num);
           }
           $other_data = array(
               'compNum' => $comp_num,
               'taskNum' => $task_num,
               'review' => $review
             );
-          $data_for_js = array_merge($data_for_js,$other_data);
-        // pass exemplars, scenarios, and competencies to Judgment App
-          wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
-
+          if(is_array($data_for_js)) {
+            // there were no errors in pulling the data
+            $data_for_js = array_merge($data_for_js,$other_data);
+            // pass exemplars, scenarios, and competencies to Judgment App
+            wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
+          } else {
+            // one of the pull_data functions returned an error message
+            echo $data_for_js;
+            // eventually, want to change this so it's not echoing where it currently is
+          }
       } else {
           echo "please log in";
       }
@@ -72,6 +81,19 @@ function gc_assess_arc_enqueue_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'gc_assess_arc_enqueue_styles' );
 
+// Add judge1 to url
+function arc_judge1_query_vars( $qvars ) {
+  $qvars[] = 'judge1';
+  return $qvars;
+}
+add_filter( 'query_vars', 'arc_judge1_query_vars' );
+
+// Add judge2 to url
+function arc_judge2_query_vars( $qvars ) {
+  $qvars[] = 'judge2';
+  return $qvars;
+}
+add_filter( 'query_vars', 'arc_judge2_query_vars' );
 
 // Add comp_num to url
 function arc_comp_query_vars( $qvars ) {
@@ -86,6 +108,13 @@ function arc_task_query_vars( $qvars ) {
     return $qvars;
 }
 add_filter( 'query_vars', 'arc_task_query_vars' );
+
+// Add block_num to url
+function arc_block_query_vars( $qvars ) {
+  $qvars[] = 'block_num';
+  return $qvars;
+}
+add_filter( 'query_vars', 'arc_block_query_vars' );
 
 // Add review to url
 function arc_review_query_vars( $qvars ) {

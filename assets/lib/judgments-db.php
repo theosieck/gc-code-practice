@@ -43,29 +43,35 @@ function gcaa_create_table() {
 }
 
 /*
- * Pulls relevant data from the CPTs using given $comp_num and $task_num.
+ * Pulls relevant data from the CPTs using given $comp_num, $task_num, and $block_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num) {
+function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
     global $current_user;
-
     $resp_args = array(
         'numberposts' => -1,
         'post_type' => 'response',
         'meta_query' => array(
             'relation' => 'AND',
             array(
-                'key' => 'comp_num',
-                'value' => $comp_num,
+                'key' => 'block_num',
+                'value' => $block_num,
                 'compare' => '=',
             ),
             array(
-                'key' => 'task_num',
-                'value' => $task_num,
-                'compare' => '=',
-            ),
+                'relation' => 'AND',
+                array(
+                    'key' => 'comp_num',
+                    'value' => $comp_num,
+                    'compare' => '=',
+                ),
+                array(
+                    'key' => 'task_num',
+                    'value' => $task_num,
+                    'compare' => '=',
+                ),
+            )
         )
     );
-
     $responses = get_posts($resp_args);
     shuffle($responses);
     foreach ($responses as $response) {
@@ -114,41 +120,51 @@ function arc_pull_data_cpts($comp_num, $task_num) {
 }
 
 /*
- * Pulls relevant data from the CPTs using given $comp_num and $task_num.
+ * Pulls relevant data from the CPTs using given $comp_num, $task_num, $block_num, user ids.
  */
-function arc_pull_review_data_cpts($comp_num, $task_num) {
+function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num) {
     global $current_user;
     global $wpdb;
     $db = new arc_judg_db;
     // get all the data for the given comp and task nums
-    $where = "comp_num = {$comp_num} AND task_num = {$task_num}";
+    $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
     $all_data = $db->get_all($where);
-    // organize the data into a 2d array where the key is the subject number and the value is an array
-    // of all the db lines for that subject
+    // organize the data into a multi-dimensional array where the key is the subject number and the value is
+    // an array of all the db lines for that subject, indexed by user id
     $all_subs = [];
     foreach ($all_data as $sub) {
-        $all_subs[$sub->sub_num][] = $sub;
+        // filter by block_num
+        if(get_page_by_title($sub->resp_title, 'OBJECT', 'response')->block_num == $block_num) {
+            // this only keeps the most recent judgement for the given user id
+            $all_subs[$sub->sub_num][$sub->user_id] = $sub;
+        }
+    }
+    if(empty($all_subs)) {
+        return "Need assessments from both raters";
     }
     // filter the db lines so that the subjects that have not yet been reviewed and have more than one
     // response are added to the review set
     $review_set = [];
     $review_titles = [];
     foreach($all_subs as $sub) {
-        // each response will be judged by two people and then reviewed, so if there is only one line
-        // in the db then it is not ready for review yet and if there are 3 lines then it has already
-        // been reviewed.
-        if(count($sub)==2) {
+        // check that both raters/judges have completed the relevant block of cases
+        // -- entire block must be completed by each judge
+        if(($sub[$judge1]==NULL) || ($sub[$judge2]==NULL)) {
+            // one or both judges have not completed this block
+            return "Need assessments from both raters";
+        } else {
+            // both judges have completed this block
             // only add to the set the pairs of judg_levels that are different
-            if($sub[0]->judg_level != $sub[1]->judg_level) {
-                $sub_num = $sub[0]->sub_num;
+            if($sub[$judge1]->judg_level != $sub[$judge2]->judg_level) {
+                $sub_num = $sub[$judge1]->sub_num;
                 $review_set[$sub_num] = array(
                     'sub_num' => $sub_num,
-                    'judg_level_1' => $sub[0]->judg_level,
-                    'judg_level_2' => $sub[1]->judg_level,
-                    'rationale_1' => $sub[0]->rationale,
-                    'rationale_2' => $sub[1]->rationale
+                    'judg_level_1' => $sub[$judge1]->judg_level,
+                    'judg_level_2' => $sub[$judge2]->judg_level,
+                    'rationale_1' => $sub[$judge1]->rationale,
+                    'rationale_2' => $sub[$judge2]->rationale
                 );
-                $response = get_page_by_title($sub[0]->resp_title, 'OBJECT', 'response');
+                $response = get_page_by_title($sub[$judge1]->resp_title, 'OBJECT', 'response');
                 $resp_id = $response->ID;
                 $resp_ids[] = $resp_id;
                 $sub_nums[] = $sub_num;
@@ -156,19 +172,22 @@ function arc_pull_review_data_cpts($comp_num, $task_num) {
             } else {   
                 // add a 'rev' line to the db for this sub, since both judges agreed
                 $db_data = array(
-                    'user_id' => $sub[0]->user_id,
-                    'sub_num' => $sub[0]->sub_num,
-                    'comp_num' => $sub[0]->comp_num,
-                    'task_num' => $sub[0]->task_num,
-                    'resp_title' => $sub[0]->resp_title,
+                    'user_id' => $judge1,
+                    'sub_num' => $sub[$judge1]->sub_num,
+                    'comp_num' => $sub[$judge1]->comp_num,
+                    'task_num' => $sub[$judge1]->task_num,
+                    'resp_title' => $sub[$judge1]->resp_title,
                     'judg_type' => 'rev',
-                    'judg_level' => $sub[0]->judg_level,
-                    'judg_time'  => $sub[0]->judg_time,
-                    'rationale' => $sub[0]->rationale
+                    'judg_level' => $sub[$judge1]->judg_level,
+                    'judg_time'  => $sub[$judge1]->judg_time,
+                    'rationale' => $sub[$judge1]->rationale
                 );
                 $db->insert($db_data);
             }
         }
+    }
+    if(empty($review_set)) {
+        return "All level ratings for these two judges matched. No disagreements found.";
     }
 
     $s_args = array(
