@@ -47,8 +47,6 @@ function gcaa_create_table() {
  */
 function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
     global $current_user;
-    global $wpdb;
-    $db = new arc_judg_db;
     $resp_args = array(
         'numberposts' => -1,
         'post_type' => 'response',
@@ -74,18 +72,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
             )
         )
     );
-    $all_responses = get_posts($resp_args);
-    $responses = [];
-    foreach($all_responses as $response) {
-        $where = "user_id = {$current_user->ID} AND resp_title = '{$response->post_title}' AND judg_type = 'ind'";
-        $data = $db->get_all($where);
-        if(empty($data)) {
-            $responses[] = $response;
-        }
-    }
-    if(empty($responses)) {
-        return "You have assessed all the responses for this block.";
-    }
+    $responses = get_posts($resp_args);
     shuffle($responses);
     foreach ($responses as $response) {
         $resp_id = $response->ID;
