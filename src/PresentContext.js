@@ -4,6 +4,7 @@
 // const { Panel, PanelBody, PanelRow } = wp.components;
 
 //import React from 'react';
+import ReactHtmlParser from 'react-html-parser';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
@@ -32,7 +33,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {props.scenario}
+                        {ReactHtmlParser(props.scenario)}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>

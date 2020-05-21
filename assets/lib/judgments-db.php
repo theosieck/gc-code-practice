@@ -77,10 +77,14 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
     $all_responses = get_posts($resp_args);
     $responses = [];
     foreach($all_responses as $response) {
-        $where = "user_id = {$current_user->ID} AND resp_title = '{$response->post_title}' AND judg_type = 'ind'";
-        $data = $db->get_all($where);
-        if(empty($data)) {
+        if($current_user->ID == 1) {
             $responses[] = $response;
+        } else {
+            $where = "user_id = {$current_user->ID} AND resp_title = '{$response->post_title}' AND judg_type = 'ind'";
+            $data = $db->get_all($where);
+            if(empty($data)) {
+                $responses[] = $response;
+            }
         }
     }
     if(empty($responses)) {
@@ -116,7 +120,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
         $c_defs[$j] = trim($competency->post_content, '""');
         $c_titles[$j] = $competency->post_title;
     }
-
+    
     $data_for_js = array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('gcaa_scores_nonce'),

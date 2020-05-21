@@ -22,6 +22,8 @@ function arc_register_cpt_response() {
         'labels' => $labels,
         'public' => true,
         'taxonomies' => array('category'),
+        'show_in_rest' => true,
+        'supports' => array('editor')
     );
     register_post_type('response',$args);
 }
@@ -47,6 +49,8 @@ function arc_register_cpt_competency() {
             'labels' => $labels,
             'public' => true,
             'taxonomies' => array('category'),
+            'show_in_rest' => true,
+            'supports' => array('editor')
         );
     
         register_post_type('competency',$args);
@@ -74,8 +78,10 @@ function arc_register_cpt_scenario() {
             'labels' => $labels,
             'public' => true,
             'taxonomies' => array('category'),
+            'show_in_rest' => true,
+            'supports' => array('editor')
         );
-    
+        
         register_post_type('scenario',$args);
     }
 }
