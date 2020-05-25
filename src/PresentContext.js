@@ -43,7 +43,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {props.competencies[0]}
+                        {ReactHtmlParser(props.competencies[4])}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>
@@ -53,7 +53,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {props.competencies[3]}
+                        {ReactHtmlParser(props.competencies[3])}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>
@@ -63,7 +63,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {props.competencies[2]}
+                        {ReactHtmlParser(props.competencies[2])}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>
@@ -73,7 +73,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {props.competencies[1]}
+                        {ReactHtmlParser(props.competencies[1])}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>
