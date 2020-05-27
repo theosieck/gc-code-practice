@@ -148,19 +148,30 @@ function arc_save_data() {
     if($ration_time>=60) {
         $ration_time = date("H:i:s", mktime(0, 0, $ration_time));
     }
-
+    $title = get_the_title($resp_id);
     $db_data = array(
         'user_id' => $current_user->ID,
         'sub_num' => $sub_num,
         'comp_num' => $comp_num,
         'task_num' => $task_num,
-        'resp_title' => get_the_title($resp_id),
+        'resp_title' => $title,
         'judg_type' => $judg_type,
         'judg_level' => $judg_level,
         'judg_time'  => $judg_time,
         'rationale' => $rationale
     );
-    $db->insert($db_data);
+    $success = $db->insert($db_data);
+    if($success) {
+      $response['type'] = 'success';
+      $data = $db->get_all("user_id = {$current_user->ID} AND resp_title = '{$title}'");
+      $response['data'] = $data[count($data)-1];
+    } else {
+      $response['type'] = $success;
+    }
+    // $response['type'] = 'success';
+    $response = json_encode($response);
+    echo $response;
+    die();
 }
 
 

@@ -74,27 +74,35 @@ class JudgmentApp extends Component {
 
     handleRevise = () => {
         this.setState(() => ({conVisible:false}));
+        var dataObj = {
+            action : 'arc_save_data',
+            sub_num: respObj.subNums[this.state.trial-1],
+            comp_num: respObj.compNum,
+            task_num: respObj.taskNum,
+            resp_id: this.state.respId,
+            judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+            judg_level: this.state.choiceNum,
+            judg_time: this.state.judgTime,
+            rationale: this.state.rationale,
+            _ajax_nonce: respObj.nonce
+        };
+
         // Save to DB
         jQuery.ajax({
-            url : respObj.ajax_url,
             type : 'post',
-            data : {
-                action : 'arc_save_data',
-                sub_num: respObj.subNums[this.state.trial-1],
-                comp_num: respObj.compNum,
-                task_num: respObj.taskNum,
-                resp_id: this.state.respId,
-                judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
-                judg_level: this.state.choiceNum,
-                judg_time: this.state.judgTime,
-                rationale: this.state.rationale,
-                _ajax_nonce: respObj.nonce
-            },
+            dataType: 'json',
+            url : respObj.ajax_url,
+            data : dataObj,
             success : function( response ) {
-                    if( !response ) {
-                        alert( 'Something went wrong, try logging in!' );
-                    }
+                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
+                    console.log('success!');
+                } else {
+                    console.log("something went wrong");
+                    console.log(response.type);
+                    // save to localStorage
+                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
                 }
+            }
         });
 
         // Set new start time
@@ -124,29 +132,72 @@ class JudgmentApp extends Component {
             }));
         }
 
+        var dataObj = {
+            action : 'arc_save_data',
+            sub_num: respObj.subNums[this.state.trial-1],
+            comp_num: respObj.compNum,
+            task_num: respObj.taskNum,
+            resp_id: this.state.respId,
+            judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+            judg_level: this.state.choiceNum,
+            judg_time: this.state.judgTime,
+            rationale: this.state.rationale,
+            _ajax_nonce: respObj.nonce
+        };
+
         // Save to DB
         jQuery.ajax({
-            url : respObj.ajax_url,
             type : 'post',
-            data : {
-                action : 'arc_save_data',
-                sub_num: respObj.subNums[this.state.trial-1],
-                comp_num: respObj.compNum,
-                task_num: respObj.taskNum,
-                resp_id: this.state.respId,
-                judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
-                judg_level: this.state.choiceNum,
-                judg_time: this.state.judgTime,
-                rationale: this.state.rationale,
-                _ajax_nonce: respObj.nonce
+            dataType: 'json',
+            url : respObj.ajax_url,
+            data : dataObj,
+            error : function( response ) {
+                console.log("something went wrong (error case)");
+                // save to localStorage
+                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
             },
             success : function( response ) {
-                    if( !response ) {
-                        alert( 'Something went wrong, try logging in!' );
-                    }
+                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
+                    console.log('success!');
+                } else {
+                    console.log("something went wrong");
+                    console.log(response.type);
+                    // save to localStorage
+                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
                 }
+            }
         });
 
+        // Check if there's anything in localStorage - if yes, try to push to DB
+        if(localStorage.length != 0) {
+            var keys = Object.keys(localStorage);
+            keys.forEach(function(key) {
+                var localObj = JSON.parse(localStorage.getItem(key));
+                localObj._ajax_nonce = respObj.nonce;
+                // Save to DB
+                jQuery.ajax({
+                    type : 'post',
+                    dataType: 'json',
+                    url : respObj.ajax_url,
+                    data : localObj,
+                    error : function( response ) {
+                        console.log("something went wrong (error case)");
+                        // no need to save to localStorage, since it's already there
+                    },
+                    success : function( response ) {
+                        if( response.type == 'success' && localObj.sub_num == response.data.sub_num) {
+                            console.log('success!');
+                            localStorage.removeItem(key);
+                        } else {
+                            console.log("something went wrong");
+                            console.log(response.type);
+                        }
+                    }
+                });   
+            } );
+        }
+
+        
         // Set new start time
         const newStartDate = Date.now();
         const newStartTime = Math.floor(newStartDate / 1000);

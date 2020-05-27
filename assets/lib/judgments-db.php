@@ -291,7 +291,7 @@ class arc_judg_db {
      */
     static function insert($data) {
         global $wpdb;
-        $wpdb->insert(self::_table(),$data);
+        return $wpdb->insert(self::_table(),$data);
     }
 
     /*
