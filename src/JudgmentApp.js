@@ -9,6 +9,7 @@ import Rationale from './Rationale';
 import Confirm from './Confirm';
 import ShowEnd from './ShowEnd';
 import ShowReview from './ShowReview';
+import Mismatches from './Mismatches';
 
 const nTrials = respObj.respIds.length;
 
@@ -24,6 +25,7 @@ class JudgmentApp extends Component {
         judgTime: 0,    // Time from page load to judgment made, in seconds
         allDone: false, // Whether the 'ShowEnd' component should be displayed
         rationale: null, // The user's rationale for the current trial
+        showMatches: !!respObj.review,  // display total number matches
         conVisible: false   // Whether the component 'Confirm' should be displayed
     };
     // Labels for Response judgments
@@ -50,7 +52,7 @@ class JudgmentApp extends Component {
             choiceNum: optionNum,
             judgTime: judgTime
         }));
-        if(respObj.review == 'true') {
+        if(!!respObj.review) {
             this.setState(() => ({
                 conVisible: true
             }));
@@ -80,7 +82,7 @@ class JudgmentApp extends Component {
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
-            judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+            judg_type: !!respObj.review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
             rationale: this.state.rationale,
@@ -143,7 +145,7 @@ class JudgmentApp extends Component {
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
-            judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+            judg_type: !!respObj.review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
             rationale: this.state.rationale,
@@ -236,13 +238,50 @@ class JudgmentApp extends Component {
     }
 
     /**
+     * Determines whether to save the matched cases, lets the user move on to reviewing disagreements.
+     */
+    saveMatches = (saveBool) => {
+        // if the user wants to save, make an ajax request to save the matched cases
+        if(saveBool) {
+            console.log('sending request...');
+            jQuery.ajax({
+                type : 'post',
+                dataType: 'json',
+                url : respObj.ajax_url,
+                data : {
+                    action : 'arc_save_matches',
+                    _ajax_nonce: respObj.nonce
+                },
+                error : function() {
+                    console.log("something went wrong");
+                },
+                success : function( response ) {
+                    console.log(response['type']);
+                }
+            }); 
+        }
+
+        // move on to reviewing disagreements
+        this.setState(() => ({
+            showMatches: false
+        }));
+    }
+
+    /**
      * Renders the components for JudgmentApp
      */
     render() {
         return (
             <div>
                 { this.state.allDone && <ShowEnd />}
-                {!this.state.allDone &&
+                {(!this.state.allDone && this.state.showMatches) &&
+                    <Mismatches
+                        disagreements={respObj.disagreements}
+                        total={nTrials}
+                        saveMatches={this.saveMatches}
+                    />
+                }
+                {(!this.state.allDone && !this.state.showMatches) &&
                     <PresentContext 
                         scenario={respObj.sContent}
                         competencies={respObj.cDefinitions}
@@ -251,13 +290,13 @@ class JudgmentApp extends Component {
                         cTitle={respObj.cTitles[0]}
                     />
                 }
-                { !this.state.allDone &&
+                { (!this.state.allDone && !this.state.showMatches) &&
                     <PresentResp
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
                     />
                 }
-                {(!this.state.allDone && (respObj.review == 'true')) &&
+                {(!this.state.allDone && !!respObj.review && !this.state.showMatches) &&
                     <ShowReview 
                         subNum={respObj.subNums[this.state.trial-1]}
                         reviewSet={respObj.reviewSet}
@@ -272,10 +311,10 @@ class JudgmentApp extends Component {
                         rationale={this.state.rationale}
                         handleRevise={this.handleRevise}
                         handleNext={this.handleNext}
-                        showRat={!(respObj.review == 'true')}
+                        showRat={!respObj.review}
                     />
                 }
-                {(!(respObj.review == 'true') && (!this.state.allDone && !this.state.conVisible)) &&
+                {(!respObj.review && (!this.state.allDone && !this.state.conVisible)) &&
                     <Rationale
                         levelTitles={this.levelTitles}
                         handleRationale={this.handleRationale}

@@ -123,6 +123,18 @@ function arc_review_query_vars( $qvars ) {
 }
 add_filter( 'query_vars', 'arc_review_query_vars' );
 
+add_action('wp_ajax_arc_save_matches','arc_save_matches');
+/**
+ * calls the arc_push_matches function from judgments-db.php to insert all the matched cases to the database
+ */
+function arc_save_matches() {
+  check_ajax_referer('gcaa_scores_nonce');
+  $response['type'] = arc_push_matches();
+  $response = json_encode($response);
+  echo $response;
+  die();
+}
+
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
 /*

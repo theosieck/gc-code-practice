@@ -8,6 +8,9 @@ $db_version = '1.0';
 global $arc_table_postfix;
 $arc_table_postfix = 'gc_apply_judgments';
 
+global $arc_matches;
+$arc_matches = [];
+
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
  * Creates the table "wp_gc_indep_judgments" in the database.
@@ -195,8 +198,8 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
                 $sub_nums[] = $sub_num;
                 $resp_contents[$resp_id] = trim($response->post_content, '""');
             } else {   
-                // add a 'rev' line to the db for this sub, since both judges agreed
-                $db_data = array(
+                // add this sub to 'matches' array, to be saved to db later
+                $match_data = array(
                     'user_id' => $judge1,
                     'sub_num' => $sub[$judge1]->sub_num,
                     'comp_num' => $sub[$judge1]->comp_num,
@@ -207,14 +210,14 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
                     'judg_time'  => $sub[$judge1]->judg_time,
                     'rationale' => $sub[$judge1]->rationale
                 );
-                $db->insert($db_data);
+                $arc_matches.push($match_data);
             }
         }
     }
     if(empty($review_set)) {
         return "All level ratings for these two judges matched. No disagreements found.";
     }
-    echo $disagreements . " disagreements out of " . $total . " total cases.";
+    echo "{$disagreements} disagreements out of {$total} total cases.";
 
     $s_args = array(
         'post_type' => 'scenario',
@@ -249,9 +252,27 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
         'respIds' => $resp_ids,
         'responses' => $resp_contents,
         'subNums' => $sub_nums,
-        'reviewSet' => $review_set
+        'reviewSet' => $review_set,
+        'disagreements' => $disagreements
     );
     return $data_for_js;
+}
+
+function arc_push_matches() {
+    global $wpdb;
+    $db = new arc_judg_db;
+    $msg = '';
+
+    foreach($arc_matches as $match_data) {
+        if(!($db->insert($match_data))) {
+            $msg .= "there was an error inserting match {$match_data->judg_id}. ";
+        }
+    }
+
+    if(empty($msg)) {
+        $msg = 'success';
+    }
+    return $msg;
 }
 
 /*
