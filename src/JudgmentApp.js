@@ -78,7 +78,6 @@ class JudgmentApp extends Component {
     handleRevise = () => {
         this.setState(() => ({conVisible:false}));
         var dataObj = {
-            action : 'arc_save_data',
             sub_num: respObj.subNums[this.state.trial-1],
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
@@ -86,32 +85,11 @@ class JudgmentApp extends Component {
             judg_type: review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
-            rationale: this.state.rationale,
-            _ajax_nonce: respObj.nonce
+            rationale: this.state.rationale
         };
 
         // Save to DB
-        jQuery.ajax({
-            type : 'post',
-            dataType: 'json',
-            url : respObj.ajax_url,
-            data : dataObj,
-            error : function( response ) {
-                console.log("something went wrong (error case)");
-                // save to localStorage
-                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-            },
-            success : function( response ) {
-                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
-                    console.log('success!');
-                } else {
-                    console.log("something went wrong");
-                    console.log(response.type);
-                    // save to localStorage
-                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-                }
-            }
-        });
+        this.saveData(dataObj);
 
         // Set new start time
         const newStartDate = Date.now();
@@ -141,7 +119,6 @@ class JudgmentApp extends Component {
         }
 
         var dataObj = {
-            action : 'arc_save_data',
             sub_num: respObj.subNums[this.state.trial-1],
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
@@ -149,60 +126,20 @@ class JudgmentApp extends Component {
             judg_type: review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
-            rationale: this.state.rationale,
-            _ajax_nonce: respObj.nonce
+            rationale: this.state.rationale
         };
 
         // Save to DB
-        jQuery.ajax({
-            type : 'post',
-            dataType: 'json',
-            url : respObj.ajax_url,
-            data : dataObj,
-            error : function( response ) {
-                console.log("something went wrong (error case)");
-                // save to localStorage
-                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-            },
-            success : function( response ) {
-                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
-                    console.log('success!');
-                } else {
-                    console.log("something went wrong");
-                    console.log(response.type);
-                    // save to localStorage
-                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-                }
-            }
-        });
-
+        this.saveData(dataObj);
         // Check if there's anything in localStorage - if yes, try to push to DB
         if(localStorage.length != 0) {
             var keys = Object.keys(localStorage);
-            keys.forEach(function(key) {
+            keys.forEach((key) => {
                 if(localStorage.getItem(key)!=null && localStorage.getItem(key)!=undefined && localStorage.getItem(key)!="") {
                     var localObj = JSON.parse(localStorage.getItem(key));
                     localObj._ajax_nonce = respObj.nonce;
                     // Save to DB
-                    jQuery.ajax({
-                        type : 'post',
-                        dataType: 'json',
-                        url : respObj.ajax_url,
-                        data : localObj,
-                        error : function( response ) {
-                            console.log("something went wrong (error case)");
-                            // no need to save to localStorage, since it's already there
-                        },
-                        success : function( response ) {
-                            if( response.type == 'success' && localObj.sub_num == response.data.sub_num) {
-                                console.log('success!');
-                                localStorage.removeItem(key);
-                            } else {
-                                console.log("something went wrong");
-                                console.log(response.type);
-                            }
-                        }
-                    }); 
+                    this.saveData(localObj,key); 
                 } else {
                     console.log(typeof key);
                 }   
@@ -238,6 +175,35 @@ class JudgmentApp extends Component {
         }
     }
 
+    saveData = (dataObj,key = null) => {
+        dataObj.action = 'arc_save_data';
+        dataObj._ajax_nonce = respObj.nonce;
+
+        jQuery.ajax({
+            type : 'post',
+            dataType: 'json',
+            url : respObj.ajax_url,
+            data : dataObj,
+            error : function( response ) {
+                console.log("something went wrong (error case)");
+                // save to localStorage
+                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+            },
+            success : function( response ) {
+                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
+                    console.log('success!');
+                    if(key) {
+                        localStorage.removeItem(key);
+                    }
+                } else {
+                    console.log("something went wrong");
+                    // save to localStorage
+                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+                }
+            }
+        });
+    }
+
     /**
      * Determines whether to save the matched cases, lets the user move on to reviewing disagreements.
      */
@@ -245,21 +211,7 @@ class JudgmentApp extends Component {
         // if the user wants to save, make an ajax request to save the matched cases
         if(saveBool) {
             console.log('sending request...');
-            jQuery.ajax({
-                type : 'post',
-                dataType: 'json',
-                url : respObj.ajax_url,
-                data : {
-                    action : 'arc_save_matches',
-                    _ajax_nonce: respObj.nonce
-                },
-                error : function() {
-                    console.log("something went wrong");
-                },
-                success : function( response ) {
-                    console.log(response['type']);
-                }
-            }); 
+            respObj.matches.forEach((match) => this.saveData(match));
         }
 
         // move on to reviewing disagreements
@@ -278,9 +230,8 @@ class JudgmentApp extends Component {
                 {(!this.state.allDone && this.state.showMatches) &&
                     <Mismatches
                         disagreements={respObj.disagreements}
-                        total={nTrials}
+                        total={respObj.total}
                         saveMatches={this.saveMatches}
-                        review={respObj.review}
                     />
                 }
                 {(!this.state.allDone && !this.state.showMatches) &&

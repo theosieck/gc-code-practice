@@ -13,9 +13,9 @@ defined( 'ABSPATH' ) or die( 'No direct access!' );
 
 include_once 'assets/lib/cpt-setup.php';
 include_once 'assets/lib/judgments-db.php';
+
 // Call gcaa_create_table on plugin activation.
 register_activation_hook(__FILE__,'gcaa_create_table'); // this function call has to happen here
-
 
 function gc_assess_arc_enqueue_scripts() {
 
@@ -123,18 +123,6 @@ function arc_review_query_vars( $qvars ) {
 }
 add_filter( 'query_vars', 'arc_review_query_vars' );
 
-add_action('wp_ajax_arc_save_matches','arc_save_matches');
-/**
- * calls the arc_push_matches function from judgments-db.php to insert all the matched cases to the database
- */
-function arc_save_matches() {
-  check_ajax_referer('gcaa_scores_nonce');
-  $response['type'] = arc_push_matches();
-  $response = json_encode($response);
-  echo $response;
-  die();
-}
-
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
 /*
@@ -160,7 +148,11 @@ function arc_save_data() {
     if($ration_time>=60) {
         $ration_time = date("H:i:s", mktime(0, 0, $ration_time));
     }
-    $title = get_the_title($resp_id);
+    if($resp_id) {
+      $title = get_the_title($resp_id);
+    } else {
+      $title = $_POST['resp_title'];
+    }
 
     $db_data = array(
         'user_id' => $current_user->ID,

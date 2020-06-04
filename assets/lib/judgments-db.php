@@ -8,9 +8,6 @@ $db_version = '1.0';
 global $arc_table_postfix;
 $arc_table_postfix = 'gc_apply_judgments';
 
-global $arc_matches;
-$arc_matches = [];
-
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
  * Creates the table "wp_gc_indep_judgments" in the database.
@@ -170,6 +167,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
     // response are added to the review set
     $review_set = [];
     $review_titles = [];
+    $matches = [];
     $disagreements = 0;
     $total = 0;
     foreach($all_subs as $sub) {
@@ -210,7 +208,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
                     'judg_time'  => $sub[$judge1]->judg_time,
                     'rationale' => $sub[$judge1]->rationale
                 );
-                $arc_matches.push($match_data);
+                $matches[] = $match_data;
             }
         }
     }
@@ -253,26 +251,11 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
         'responses' => $resp_contents,
         'subNums' => $sub_nums,
         'reviewSet' => $review_set,
-        'disagreements' => $disagreements
+        'disagreements' => $disagreements,
+        'total' => $total,
+        'matches' => $matches
     );
     return $data_for_js;
-}
-
-function arc_push_matches() {
-    global $wpdb;
-    $db = new arc_judg_db;
-    $msg = '';
-
-    foreach($arc_matches as $match_data) {
-        if(!($db->insert($match_data))) {
-            $msg .= "there was an error inserting match {$match_data->judg_id}. ";
-        }
-    }
-
-    if(empty($msg)) {
-        $msg = 'success';
-    }
-    return $msg;
 }
 
 /*
