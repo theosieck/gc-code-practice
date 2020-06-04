@@ -11,6 +11,7 @@ import ShowEnd from './ShowEnd';
 import ShowReview from './ShowReview';
 import Mismatches from './Mismatches';
 
+const review = respObj.review == 'true';
 const nTrials = respObj.respIds.length;
 
 class JudgmentApp extends Component {
@@ -25,7 +26,7 @@ class JudgmentApp extends Component {
         judgTime: 0,    // Time from page load to judgment made, in seconds
         allDone: false, // Whether the 'ShowEnd' component should be displayed
         rationale: null, // The user's rationale for the current trial
-        showMatches: !!respObj.review,  // display total number matches
+        showMatches: review,  // display total number matches
         conVisible: false   // Whether the component 'Confirm' should be displayed
     };
     // Labels for Response judgments
@@ -52,7 +53,7 @@ class JudgmentApp extends Component {
             choiceNum: optionNum,
             judgTime: judgTime
         }));
-        if(!!respObj.review) {
+        if(review) {
             this.setState(() => ({
                 conVisible: true
             }));
@@ -82,7 +83,7 @@ class JudgmentApp extends Component {
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
-            judg_type: !!respObj.review ? 'rev' : 'ind',
+            judg_type: review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
             rationale: this.state.rationale,
@@ -145,7 +146,7 @@ class JudgmentApp extends Component {
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
-            judg_type: !!respObj.review ? 'rev' : 'ind',
+            judg_type: review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
             rationale: this.state.rationale,
@@ -279,6 +280,7 @@ class JudgmentApp extends Component {
                         disagreements={respObj.disagreements}
                         total={nTrials}
                         saveMatches={this.saveMatches}
+                        review={respObj.review}
                     />
                 }
                 {(!this.state.allDone && !this.state.showMatches) &&
@@ -296,7 +298,7 @@ class JudgmentApp extends Component {
                         response={ respObj.responses[this.state.respId] }
                     />
                 }
-                {(!this.state.allDone && !!respObj.review && !this.state.showMatches) &&
+                {(!this.state.allDone && review && !this.state.showMatches) &&
                     <ShowReview 
                         subNum={respObj.subNums[this.state.trial-1]}
                         reviewSet={respObj.reviewSet}
@@ -311,10 +313,10 @@ class JudgmentApp extends Component {
                         rationale={this.state.rationale}
                         handleRevise={this.handleRevise}
                         handleNext={this.handleNext}
-                        showRat={!respObj.review}
+                        showRat={!review}
                     />
                 }
-                {(!respObj.review && (!this.state.allDone && !this.state.conVisible)) &&
+                {(!review && (!this.state.allDone && !this.state.conVisible)) &&
                     <Rationale
                         levelTitles={this.levelTitles}
                         handleRationale={this.handleRationale}
