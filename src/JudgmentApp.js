@@ -209,10 +209,10 @@ class JudgmentApp extends Component {
      */
     saveMatches = (saveBool) => {
         // if the user wants to save, make an ajax request to save the matched cases
-        if(saveBool) {
-            console.log('sending request...');
-            respObj.matches.forEach((match) => this.saveData(match));
-        }
+        // if(saveBool) {
+        //     console.log('sending request...');
+        //     respObj.matches.forEach((match) => this.saveData(match));
+        // }
 
         // move on to reviewing disagreements
         this.setState(() => ({
