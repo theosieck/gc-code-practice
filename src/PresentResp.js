@@ -1,4 +1,3 @@
-
 import ReactHtmlParser from 'react-html-parser';
 
 const divStyle = {
@@ -9,7 +8,7 @@ const PresentResp = (props) => (
     <div style={divStyle}>
         <h2>Case: {props.respId}</h2>
 
-        {ReactHtmlParser(props.response)}
+        <p>{ReactHtmlParser(props.response)}</p>
     </div>
 );
 

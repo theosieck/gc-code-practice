@@ -33,7 +33,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {ReactHtmlParser(props.scenario)}
+                    {ReactHtmlParser(props.scenario)}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>
@@ -43,7 +43,7 @@ function PresentContext(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
-                        {ReactHtmlParser(props.competencies[4])}
+                        {ReactHtmlParser(props.competencies[0])}
                     </Typography>
                 </ExpansionPanelDetails>
             </ExpansionPanel>

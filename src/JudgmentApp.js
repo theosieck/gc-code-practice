@@ -93,6 +93,11 @@ class JudgmentApp extends Component {
             dataType: 'json',
             url : respObj.ajax_url,
             data : dataObj,
+            error : function( response ) {
+                console.log("something went wrong (error case)");
+                // save to localStorage
+                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+            },
             success : function( response ) {
                 if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
                     console.log('success!');
@@ -172,32 +177,35 @@ class JudgmentApp extends Component {
         if(localStorage.length != 0) {
             var keys = Object.keys(localStorage);
             keys.forEach(function(key) {
-                var localObj = JSON.parse(localStorage.getItem(key));
-                localObj._ajax_nonce = respObj.nonce;
-                // Save to DB
-                jQuery.ajax({
-                    type : 'post',
-                    dataType: 'json',
-                    url : respObj.ajax_url,
-                    data : localObj,
-                    error : function( response ) {
-                        console.log("something went wrong (error case)");
-                        // no need to save to localStorage, since it's already there
-                    },
-                    success : function( response ) {
-                        if( response.type == 'success' && localObj.sub_num == response.data.sub_num) {
-                            console.log('success!');
-                            localStorage.removeItem(key);
-                        } else {
-                            console.log("something went wrong");
-                            console.log(response.type);
+                if(localStorage.getItem(key)!=null && localStorage.getItem(key)!=undefined && localStorage.getItem(key)!="") {
+                    var localObj = JSON.parse(localStorage.getItem(key));
+                    localObj._ajax_nonce = respObj.nonce;
+                    // Save to DB
+                    jQuery.ajax({
+                        type : 'post',
+                        dataType: 'json',
+                        url : respObj.ajax_url,
+                        data : localObj,
+                        error : function( response ) {
+                            console.log("something went wrong (error case)");
+                            // no need to save to localStorage, since it's already there
+                        },
+                        success : function( response ) {
+                            if( response.type == 'success' && localObj.sub_num == response.data.sub_num) {
+                                console.log('success!');
+                                localStorage.removeItem(key);
+                            } else {
+                                console.log("something went wrong");
+                                console.log(response.type);
+                            }
                         }
-                    }
-                });   
+                    }); 
+                } else {
+                    console.log(typeof key);
+                }   
             } );
         }
 
-        
         // Set new start time
         const newStartDate = Date.now();
         const newStartTime = Math.floor(newStartDate / 1000);
@@ -240,7 +248,7 @@ class JudgmentApp extends Component {
                         competencies={respObj.cDefinitions}
                         levelTitles={this.levelTitles}
                         sTitle={respObj.sTitle}
-                        cTitle={respObj.cTitles[4]}
+                        cTitle={respObj.cTitles[0]}
                     />
                 }
                 { !this.state.allDone &&

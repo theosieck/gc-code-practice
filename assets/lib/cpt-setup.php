@@ -81,7 +81,7 @@ function arc_register_cpt_scenario() {
             'show_in_rest' => true,
             'supports' => array('editor')
         );
-        
+    
         register_post_type('scenario',$args);
     }
 }

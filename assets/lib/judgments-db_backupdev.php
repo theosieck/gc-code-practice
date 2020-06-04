@@ -88,9 +88,12 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
             if(empty($data)) {
                 $responses[] = $response;
                 $for_assessment++;
+            } else {
+                echo "response {$response->post_title} already reviewed. ";
             }
         }
     }
+    echo "total: {$total}, not previously assessed: {$for_assessment}. ";
     if(empty($responses)) {
         return "You have assessed all the responses for this block.";
     }
@@ -167,20 +170,26 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
     // response are added to the review set
     $review_set = [];
     $review_titles = [];
-    $disagreements = 0;
+    $count = 0;
+    $not_done_1 = [];
+    $not_done_2 = [];
     $total = 0;
     foreach($all_subs as $sub) {
         $total++;
         // check that both raters/judges have completed the relevant block of cases
         // -- entire block must be completed by each judge
-        if(($sub[$judge1]==NULL) || ($sub[$judge2]==NULL)) {
+        if(($sub[$judge1]==NULL)) {
             // one or both judges have not completed this block
-            return "Need assessments from both raters";
+            $not_done_1[] = $sub;
+        }
+        if(($sub[$judge2]==NULL)) {
+            // one or both judges have not completed this block
+            $not_done_2[] = $sub[$judge1]->sub_num;
         } else {
             // both judges have completed this block
             // only add to the set the pairs of judg_levels that are different
             if($sub[$judge1]->judg_level != $sub[$judge2]->judg_level) {
-                $disagreements++;
+                $count++;
                 $sub_num = $sub[$judge1]->sub_num;
                 $review_set[$sub_num] = array(
                     'sub_num' => $sub_num,
@@ -211,10 +220,16 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
             }
         }
     }
+    echo $count;
+    echo "judge1: ";
+    var_dump($not_done_1);
+    echo "judge2: ";
+    var_dump($not_done_2);
+    echo "total: ";
+    echo $total;
     if(empty($review_set)) {
         return "All level ratings for these two judges matched. No disagreements found.";
     }
-    echo $disagreements . " disagreements out of " . $total . " total cases.";
 
     $s_args = array(
         'post_type' => 'scenario',
