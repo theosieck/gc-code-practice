@@ -9,7 +9,9 @@ import Rationale from './Rationale';
 import Confirm from './Confirm';
 import ShowEnd from './ShowEnd';
 import ShowReview from './ShowReview';
+import Mismatches from './Mismatches';
 
+const review = respObj.review == 'true';
 const nTrials = respObj.respIds.length;
 
 class JudgmentApp extends Component {
@@ -24,6 +26,7 @@ class JudgmentApp extends Component {
         judgTime: 0,    // Time from page load to judgment made, in seconds
         allDone: false, // Whether the 'ShowEnd' component should be displayed
         rationale: null, // The user's rationale for the current trial
+        showMatches: review,  // display total number matches
         conVisible: false   // Whether the component 'Confirm' should be displayed
     };
     // Labels for Response judgments
@@ -50,7 +53,7 @@ class JudgmentApp extends Component {
             choiceNum: optionNum,
             judgTime: judgTime
         }));
-        if(respObj.review == 'true') {
+        if(review) {
             this.setState(() => ({
                 conVisible: true
             }));
@@ -75,40 +78,18 @@ class JudgmentApp extends Component {
     handleRevise = () => {
         this.setState(() => ({conVisible:false}));
         var dataObj = {
-            action : 'arc_save_data',
             sub_num: respObj.subNums[this.state.trial-1],
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
-            judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+            judg_type: review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
-            rationale: this.state.rationale,
-            _ajax_nonce: respObj.nonce
+            rationale: this.state.rationale
         };
 
         // Save to DB
-        jQuery.ajax({
-            type : 'post',
-            dataType: 'json',
-            url : respObj.ajax_url,
-            data : dataObj,
-            error : function( response ) {
-                console.log("something went wrong (error case)");
-                // save to localStorage
-                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-            },
-            success : function( response ) {
-                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
-                    console.log('success!');
-                } else {
-                    console.log("something went wrong");
-                    console.log(response.type);
-                    // save to localStorage
-                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-                }
-            }
-        });
+        this.saveData(dataObj);
 
         // Set new start time
         const newStartDate = Date.now();
@@ -138,68 +119,27 @@ class JudgmentApp extends Component {
         }
 
         var dataObj = {
-            action : 'arc_save_data',
             sub_num: respObj.subNums[this.state.trial-1],
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
-            judg_type: (respObj.review == 'true') ? 'rev' : 'ind',
+            judg_type: review ? 'rev' : 'ind',
             judg_level: this.state.choiceNum,
             judg_time: this.state.judgTime,
-            rationale: this.state.rationale,
-            _ajax_nonce: respObj.nonce
+            rationale: this.state.rationale
         };
 
         // Save to DB
-        jQuery.ajax({
-            type : 'post',
-            dataType: 'json',
-            url : respObj.ajax_url,
-            data : dataObj,
-            error : function( response ) {
-                console.log("something went wrong (error case)");
-                // save to localStorage
-                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-            },
-            success : function( response ) {
-                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
-                    console.log('success!');
-                } else {
-                    console.log("something went wrong");
-                    console.log(response.type);
-                    // save to localStorage
-                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
-                }
-            }
-        });
-
+        this.saveData(dataObj);
         // Check if there's anything in localStorage - if yes, try to push to DB
         if(localStorage.length != 0) {
             var keys = Object.keys(localStorage);
-            keys.forEach(function(key) {
+            keys.forEach((key) => {
                 if(localStorage.getItem(key)!=null && localStorage.getItem(key)!=undefined && localStorage.getItem(key)!="") {
                     var localObj = JSON.parse(localStorage.getItem(key));
                     localObj._ajax_nonce = respObj.nonce;
                     // Save to DB
-                    jQuery.ajax({
-                        type : 'post',
-                        dataType: 'json',
-                        url : respObj.ajax_url,
-                        data : localObj,
-                        error : function( response ) {
-                            console.log("something went wrong (error case)");
-                            // no need to save to localStorage, since it's already there
-                        },
-                        success : function( response ) {
-                            if( response.type == 'success' && localObj.sub_num == response.data.sub_num) {
-                                console.log('success!');
-                                localStorage.removeItem(key);
-                            } else {
-                                console.log("something went wrong");
-                                console.log(response.type);
-                            }
-                        }
-                    }); 
+                    this.saveData(localObj,key); 
                 } else {
                     console.log(typeof key);
                 }   
@@ -235,6 +175,51 @@ class JudgmentApp extends Component {
         }
     }
 
+    saveData = (dataObj,key = null) => {
+        dataObj.action = 'arc_save_data';
+        dataObj._ajax_nonce = respObj.nonce;
+
+        jQuery.ajax({
+            type : 'post',
+            dataType: 'json',
+            url : respObj.ajax_url,
+            data : dataObj,
+            error : function( response ) {
+                console.log("something went wrong (error case)");
+                // save to localStorage
+                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+            },
+            success : function( response ) {
+                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
+                    console.log('success!');
+                    if(key) {
+                        localStorage.removeItem(key);
+                    }
+                } else {
+                    console.log("something went wrong");
+                    // save to localStorage
+                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+                }
+            }
+        });
+    }
+
+    /**
+     * Determines whether to save the matched cases, lets the user move on to reviewing disagreements.
+     */
+    saveMatches = (saveBool) => {
+        // if the user wants to save, make an ajax request to save the matched cases
+        // if(saveBool) {
+        //     console.log('sending request...');
+        //     respObj.matches.forEach((match) => this.saveData(match));
+        // }
+
+        // move on to reviewing disagreements
+        this.setState(() => ({
+            showMatches: false
+        }));
+    }
+
     /**
      * Renders the components for JudgmentApp
      */
@@ -242,7 +227,14 @@ class JudgmentApp extends Component {
         return (
             <div>
                 { this.state.allDone && <ShowEnd />}
-                {!this.state.allDone &&
+                {(!this.state.allDone && this.state.showMatches) &&
+                    <Mismatches
+                        disagreements={respObj.disagreements}
+                        total={respObj.total}
+                        saveMatches={this.saveMatches}
+                    />
+                }
+                {(!this.state.allDone && !this.state.showMatches) &&
                     <PresentContext 
                         scenario={respObj.sContent}
                         competencies={respObj.cDefinitions}
@@ -251,13 +243,13 @@ class JudgmentApp extends Component {
                         cTitle={respObj.cTitles[0]}
                     />
                 }
-                { !this.state.allDone &&
+                { (!this.state.allDone && !this.state.showMatches) &&
                     <PresentResp
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
                     />
                 }
-                {(!this.state.allDone && (respObj.review == 'true')) &&
+                {(!this.state.allDone && review && !this.state.showMatches) &&
                     <ShowReview 
                         subNum={respObj.subNums[this.state.trial-1]}
                         reviewSet={respObj.reviewSet}
@@ -272,10 +264,10 @@ class JudgmentApp extends Component {
                         rationale={this.state.rationale}
                         handleRevise={this.handleRevise}
                         handleNext={this.handleNext}
-                        showRat={!(respObj.review == 'true')}
+                        showRat={!review}
                     />
                 }
-                {(!(respObj.review == 'true') && (!this.state.allDone && !this.state.conVisible)) &&
+                {(!review && (!this.state.allDone && !this.state.conVisible)) &&
                     <Rationale
                         levelTitles={this.levelTitles}
                         handleRationale={this.handleRationale}

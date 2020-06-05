@@ -13,9 +13,9 @@ defined( 'ABSPATH' ) or die( 'No direct access!' );
 
 include_once 'assets/lib/cpt-setup.php';
 include_once 'assets/lib/judgments-db.php';
+
 // Call gcaa_create_table on plugin activation.
 register_activation_hook(__FILE__,'gcaa_create_table'); // this function call has to happen here
-
 
 function gc_assess_arc_enqueue_scripts() {
 
@@ -148,7 +148,11 @@ function arc_save_data() {
     if($ration_time>=60) {
         $ration_time = date("H:i:s", mktime(0, 0, $ration_time));
     }
-    $title = get_the_title($resp_id);
+    if($resp_id) {
+      $title = get_the_title($resp_id);
+    } else {
+      $title = $_POST['resp_title'];
+    }
 
     $db_data = array(
         'user_id' => $current_user->ID,
