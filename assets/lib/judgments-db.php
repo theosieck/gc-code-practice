@@ -197,7 +197,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
                 $resp_contents[$resp_id] = trim($response->post_content, '""');
             } else {
                 // check if data has already been saved to database
-                $where = "resp_title = {$sub[$judge1]->resp_title} AND judg_type = 'rev'";
+                $where = "resp_title = '{$sub[$judge1]->resp_title}' AND judg_type = 'rev'";
                 $all_data = $db->get_all($where);
                 if(empty($all_data)) {
                     // save this sub to db
