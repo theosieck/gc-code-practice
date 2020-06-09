@@ -1,6 +1,6 @@
 <?php
 /*
-   Plugin Name: GC Assess Arc
+   Plugin Name: GC Code ARC
    Version: 1.0.0
    Author: Global Cognition
    Author URI: https://www.globalcognition.org
@@ -15,7 +15,7 @@ include_once 'assets/lib/cpt-setup.php';
 include_once 'assets/lib/judgments-db.php';
 
 // Call gcaa_create_table on plugin activation.
-register_activation_hook(__FILE__,'gcaa_create_table'); // this function call has to happen here
+register_activation_hook(__FILE__,'gcpc_create_table'); // this function call has to happen here
 
 function gc_assess_arc_enqueue_scripts() {
 
@@ -37,15 +37,14 @@ function gc_assess_arc_enqueue_scripts() {
           $task_num = sanitize_text_field(get_query_var('task_num'));
           $block_num = sanitize_text_field(get_query_var('block_num'));
           $review = sanitize_text_field(get_query_var('review'));;
-          $exemplar = sanitize_text_field(get_query_var('exemplar'));;
+          // $exemplar = sanitize_text_field(get_query_var('exemplar'));;
           if($review) {
             $judge1 = sanitize_text_field(get_query_var('judge1'));
             $judge2 = sanitize_text_field(get_query_var('judge2'));
-            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num, $exemplar);
+            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num);
           } else {
-            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $block_num, $exemplar);
+            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $block_num);
           }
-          d($data_for_js);
           $other_data = array(
               'compNum' => $comp_num,
               'taskNum' => $task_num,
@@ -126,11 +125,11 @@ function arc_review_query_vars( $qvars ) {
 add_filter( 'query_vars', 'arc_review_query_vars' );
 
 // Add exemplar to url
-function arc_exemplar_query_vars( $qvars ) {
-  $qvars[] = 'exemplar';
-  return $qvars;
-}
-add_filter( 'query_vars', 'arc_exemplar_query_vars' );
+// function arc_exemplar_query_vars( $qvars ) {
+//   $qvars[] = 'exemplar';
+//   return $qvars;
+// }
+// add_filter( 'query_vars', 'arc_exemplar_query_vars' );
 
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
@@ -140,16 +139,20 @@ add_action('wp_ajax_arc_save_data','arc_save_data');
 function arc_save_data() {
     check_ajax_referer('gcaa_scores_nonce');
     global $current_user;
+    // global $arc_table_postfix;
+    // global $prac_table_postfix;
+
+    // $postfix = $_POST['type'] == 'exemplar' ? $prac_table_postfix : $arc_table_postfix;
     $db = new arc_judg_db;
+
     // Get data from React components
     $sub_num = $_POST['sub_num'];
     $comp_num = $_POST['comp_num'];
     $task_num = $_POST['task_num'];
     $resp_id = $_POST['resp_id'];
     $judg_type = $_POST['judg_type'];
-    $judg_level = $_POST['judg_level'];
     $judg_time = $_POST['judg_time'];
-    $rationale = $_POST['rationale'];
+    $codes = $_POST['codes'];
 
     if($judg_time>=60) {
         $judg_time = date("H:i:s", mktime(0, 0, $judg_time));
@@ -170,10 +173,27 @@ function arc_save_data() {
         'task_num' => $task_num,
         'resp_title' => $title,
         'judg_type' => $judg_type,
-        'judg_level' => $judg_level,
         'judg_time'  => $judg_time,
-        'rationale' => $rationale
+        'code1' => $codes[1][0],
+        'excerpt1' => $codes[1][1],
+        'code2' => $codes[2][0],
+        'excerpt2' => $codes[2][1],
+        'code3' => $codes[3][0],
+        'excerpt3' => $codes[3][1],
+        'code4' => $codes[4][0],
+        'excerpt4' => $codes[4][1],
+        'code5' => $codes[5][0],
+        'excerpt5' => $codes[5][1],
+        'code6' => $codes[6][0],
+        'excerpt6' => $codes[6][1],
+        'code7' => $codes[7][0],
+        'excerpt7' => $codes[7][1],
+        'code8' => $codes[8][0],
+        'excerpt8' => $codes[8][1],
+        'code9' => $codes[9][0],
+        'excerpt9' => $codes[9][1]
     );
+
     $success = $db->insert($db_data);
     if($success) {
       $response['type'] = 'success';

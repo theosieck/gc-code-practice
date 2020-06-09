@@ -15,7 +15,8 @@ import JudgmentBox from './JudgmentBox';
 const review = respObj.review == '1';
 const nTrials = respObj.respIds.length;
 const codes = [];
-for(let i=1;i<=respObj.numCodes;i++) {
+const numCodes = respObj.numCodes;
+for(let i=1;i<=numCodes;i++) {
     codes[i] = respObj.codeLabels[i];
 }
 
@@ -25,14 +26,9 @@ class JudgmentApp extends Component {
     state = {
         trial: 1,   // Each judgment is one trial
         respId: respObj.respIds[0],   // The ID of the Response being judged
-        choice: null,   // Text of the user's judgment
-        choiceNum: 0,   // Number of the user's judgment
         startTime: Math.floor(this.startDate / 1000),    // UNIX time on page load, in seconds
-        judgTime: 0,    // Time from page load to judgment made, in seconds
         allDone: false, // Whether the 'ShowEnd' component should be displayed
-        rationale: null, // The user's rationale for the current trial
         showMatches: review,  // display total number matches
-        conVisible: false   // Whether the component 'Confirm' should be displayed
     };
     // Labels for Response judgments
     levelTitles = {
@@ -40,67 +36,6 @@ class JudgmentApp extends Component {
         2: "Proficient",
         3: "Master"
     };
-
-    /**
-     * handleChoice: calculates judg_time, updates state
-     * Parameters: optionNum, the numerical value of the judgment; option, the text value
-     * Fires: when the user clicks a 'judgment' button
-     */
-    handleChoice = (optionNum, option) => {
-        // Calculate time from task load to option selected
-        const endDate = Date.now();
-        const endTime = Math.floor(endDate / 1000);
-        const judgTime = endTime - this.state.startTime;
-
-        // Update state
-        this.setState(() => ({
-            choice: option,
-            choiceNum: optionNum,
-            judgTime: judgTime
-        }));
-        if(review) {
-            this.setState(() => ({
-                conVisible: true
-            }));
-        }
-    }
-
-    handleRationale = (rationale) => {
-        // Verify rationale
-        if (!rationale) {
-            return "Enter a valid rationale";
-        }
-        const wordRat = rationale.split(" ");
-        if (wordRat.length > 125) {
-            return "Trim your rationale down to 125 words";
-        }
-        this.setState(() => ({
-            rationale: rationale,
-            conVisible: true
-        }));
-    }
-
-    handleRevise = () => {
-        this.setState(() => ({conVisible:false}));
-        var dataObj = {
-            sub_num: respObj.subNums[this.state.trial-1],
-            comp_num: respObj.compNum,
-            task_num: respObj.taskNum,
-            resp_id: this.state.respId,
-            judg_type: review ? 'rev' : 'ind',
-            judg_level: this.state.choiceNum,
-            judg_time: this.state.judgTime,
-            rationale: this.state.rationale
-        };
-
-        // Save to DB
-        this.saveData(dataObj);
-
-        // Set new start time
-        const newStartDate = Date.now();
-        const newStartTime = Math.floor(newStartDate / 1000);
-        this.setState(() => ({startTime: newStartTime}));
-    }
     
     /**
      * handleNext: checks whether the user is finished with the current set, saves the current line to
@@ -108,12 +43,14 @@ class JudgmentApp extends Component {
      * Parameters: none
      * Fires: when the user clicks the 'Next' button
      */
-    handleNext = () => {
+    handleNext = (excerpts,codes) => {
+        console.log(this.state.respId)
+
         // Check whether the user has finished all the trials
         if (this.state.trial < nTrials) {
+            console.log(this.state.trial)
             this.setState((prevState) => ({
-                trial: prevState.trial + 1,
-                conVisible: false
+                trial: prevState.trial + 1
             }),
             this.getCase
             );
@@ -123,15 +60,26 @@ class JudgmentApp extends Component {
             }));
         }
 
+        console.log(this.state.respId)
+
+        const endDate = Date.now();
+        const endTime = Math.floor(endDate / 1000);
+        const judgTime = endTime - this.state.startTime;
+
+        let codesArray = []
+        let i=0;
+        for(i;i<numCodes;i++) {
+            codesArray[i+1] = [codes[i],excerpts[i]]
+        }
+
         var dataObj = {
             sub_num: respObj.subNums[this.state.trial-1],
             comp_num: respObj.compNum,
             task_num: respObj.taskNum,
             resp_id: this.state.respId,
             judg_type: review ? 'rev' : 'ind',
-            judg_level: this.state.choiceNum,
-            judg_time: this.state.judgTime,
-            rationale: this.state.rationale
+            judg_time: judgTime,
+            codes: codesArray
         };
 
         // Save to DB
@@ -195,7 +143,8 @@ class JudgmentApp extends Component {
                 localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
             },
             success : function( response ) {
-                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
+                if( response.type == 'success') {
+                    // && dataObj.sub_num == response.data.sub_num
                     console.log('success!');
                     if(key) {
                         localStorage.removeItem(key);
@@ -253,33 +202,9 @@ class JudgmentApp extends Component {
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
                         codes={codes}
-                    />
-                }
-                {(!this.state.allDone && review && !this.state.showMatches) &&
-                    <ShowReview 
-                        subNum={respObj.subNums[this.state.trial-1]}
-                        reviewSet={respObj.reviewSet}
-                        handleChoice={this.handleChoice}
-                        levelTitles={this.levelTitles}
-                        conVisible={this.state.conVisible}
-                    />
-                }
-                {(!this.state.allDone && this.state.conVisible) &&
-                    <Confirm
-                        choice={this.state.choice}
-                        rationale={this.state.rationale}
-                        handleRevise={this.handleRevise}
                         handleNext={this.handleNext}
-                        showRat={!review}
                     />
                 }
-                {/*</div> {(!review && (!this.state.allDone && !this.state.conVisible)) &&
-                    <Rationale
-                        levelTitles={this.levelTitles}
-                        handleRationale={this.handleRationale}
-                        handleChoice={this.handleChoice}
-                    />
-                } */}
             </div>
         );
     }

@@ -8,10 +8,12 @@ import SelectionHighlighter from 'react-highlight-selection';
 const PresentResp = (props) => (
     <div>
         <h2>Case: {props.respId}</h2>
-        <SelectionHighlighter
+        {//ReactHtmlParser(props.response)
+        }
+        {<SelectionHighlighter
             text={ReactHtmlParser(props.response)}
             selectionHandler={props.handleSelection}
-        />
+        />}
     </div>
 );
 

@@ -5,20 +5,20 @@
 global $db_version;
 $db_version = '1.0';
 
-global $arc_table_postfix;
-$arc_table_postfix = 'gc_apply_judgments';
+global $prac_table_postfix;
+$prac_table_postfix = 'gc_prac_codes';
 
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
- * Creates the table "wp_gc_indep_judgments" in the database.
+ * Creates the table "wp_gc_prac_codes" in the database.
  */
-function gcaa_create_table() {
+function gcpc_create_table() {
     global $wpdb;
     global $db_version;
-    global $arc_table_postfix;
+    global $prac_table_postfix;
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-    $arc_table_name = $wpdb->prefix . $arc_table_postfix;
+    $arc_table_name = $wpdb->prefix . $prac_table_postfix;
 
     $charset_collate = $wpdb->get_charset_collate();
 
@@ -30,9 +30,25 @@ function gcaa_create_table() {
 		task_num smallint(2) UNSIGNED NOT NULL,
 		resp_title tinytext NOT NULL,
         judg_type tinytext NOT NULL,
-		judg_level smallint(1) UNSIGNED NOT NULL,
 		judg_time time NOT NULL,
-	    rationale longtext NOT NULL,
+        code1 smallint(1) UNSIGNED NOT NULL,
+        excerpt1 longtext,
+        code2 smallint(1) UNSIGNED NOT NULL,
+        excerpt2 longtext,
+        code3 smallint(1) UNSIGNED NOT NULL,
+        excerpt3 longtext,
+        code4 smallint(1) UNSIGNED NOT NULL,
+        excerpt4 longtext,
+        code5 smallint(1) UNSIGNED NOT NULL,
+        excerpt5 longtext,
+        code6 smallint(1) UNSIGNED NOT NULL,
+        excerpt6 longtext,
+        code7 smallint(1) UNSIGNED NOT NULL,
+        excerpt7 longtext,
+        code8 smallint(1) UNSIGNED,
+        excerpt8 longtext,
+        code9 smallint(1) UNSIGNED,
+        excerpt9 longtext,
         PRIMARY KEY (judg_id)
 	) $charset_collate;";
 
@@ -45,56 +61,30 @@ function gcaa_create_table() {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num, and $block_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num, $block_num, $exemplar) {
+function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
     global $current_user;
     global $wpdb;
+
     $db = new arc_judg_db;
-    if($exemplar==0) {
-        $resp_args = array(
-            'numberposts' => -1,
-            'post_type' => 'exemplar',
-            'meta_query' =>
-                array(
-                    'relation' => 'AND',
-                    array(
-                        'key' => 'comp_num',
-                        'value' => $comp_num,
-                        'compare' => '=',
-                    ),
-                    array(
-                        'key' => 'task_num',
-                        'value' => $task_num,
-                        'compare' => '=',
-                    ),
-                )
-        );
-    } else {
-        $resp_args = array(
-            'numberposts' => -1,
-            'post_type' => 'response',
-            'meta_query' => array(
+
+    $resp_args = array(
+        'numberposts' => -1,
+        'post_type' => 'exemplar',
+        'meta_query' =>
+            array(
                 'relation' => 'AND',
                 array(
-                    'key' => 'block_num',
-                    'value' => $block_num,
+                    'key' => 'comp_num',
+                    'value' => $comp_num,
                     'compare' => '=',
                 ),
                 array(
-                    'relation' => 'AND',
-                    array(
-                        'key' => 'comp_num',
-                        'value' => $comp_num,
-                        'compare' => '=',
-                    ),
-                    array(
-                        'key' => 'task_num',
-                        'value' => $task_num,
-                        'compare' => '=',
-                    ),
-                )
+                    'key' => 'task_num',
+                    'value' => $task_num,
+                    'compare' => '=',
+                ),
             )
-        );
-    }
+    );
     
     $all_responses = get_posts($resp_args);
     $responses = [];
@@ -186,7 +176,9 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num, $exemplar) {
 function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num) {
     global $current_user;
     global $wpdb;
+
     $db = new arc_judg_db;
+
     // get all the data for the given comp and task nums
     $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
     $all_data = $db->get_all($where);
@@ -314,8 +306,8 @@ class arc_judg_db {
      */
     private static function _table() {
         global $wpdb;
-        global $arc_table_postfix;
-        return $wpdb->prefix . $arc_table_postfix;
+        global $prac_table_postfix;
+        return $wpdb->prefix . $prac_table_postfix;
     }
 
     /*
@@ -383,6 +375,7 @@ class arc_judg_db {
         $sql   = "SELECT * FROM " . self::_table() . " WHERE {$where}";
         return $wpdb->get_results( $sql );
     }
+
 
     /*
      * Returns an array of the columns and their formats
