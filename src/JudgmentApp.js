@@ -10,9 +10,14 @@ import Confirm from './Confirm';
 import ShowEnd from './ShowEnd';
 import ShowReview from './ShowReview';
 import Mismatches from './Mismatches';
+import JudgmentBox from './JudgmentBox';
 
-const review = respObj.review == 'true';
+const review = respObj.review == '1';
 const nTrials = respObj.respIds.length;
+const codes = [];
+for(let i=1;i<=respObj.numCodes;i++) {
+    codes[i] = respObj.codeLabels[i];
+}
 
 class JudgmentApp extends Component {
     // Tracks various attributes and their changes as the user moves through the trials
@@ -244,9 +249,10 @@ class JudgmentApp extends Component {
                     />
                 }
                 { (!this.state.allDone && !this.state.showMatches) &&
-                    <PresentResp
+                    <JudgmentBox
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
+                        codes={codes}
                     />
                 }
                 {(!this.state.allDone && review && !this.state.showMatches) &&
@@ -267,13 +273,13 @@ class JudgmentApp extends Component {
                         showRat={!review}
                     />
                 }
-                {(!review && (!this.state.allDone && !this.state.conVisible)) &&
+                {/*</div> {(!review && (!this.state.allDone && !this.state.conVisible)) &&
                     <Rationale
                         levelTitles={this.levelTitles}
                         handleRationale={this.handleRationale}
                         handleChoice={this.handleChoice}
                     />
-                }
+                } */}
             </div>
         );
     }

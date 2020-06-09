@@ -1,14 +1,17 @@
 import ReactHtmlParser from 'react-html-parser';
+import SelectionHighlighter from 'react-highlight-selection';
 
-const divStyle = {
-    marginTop: '50px'
-};
+// const divStyle = {
+//     marginTop: '50px'
+// };
 
 const PresentResp = (props) => (
-    <div style={divStyle}>
+    <div>
         <h2>Case: {props.respId}</h2>
-
-        <p>{ReactHtmlParser(props.response)}</p>
+        <SelectionHighlighter
+            text={ReactHtmlParser(props.response)}
+            selectionHandler={props.handleSelection}
+        />
     </div>
 );
 

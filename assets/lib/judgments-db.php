@@ -45,42 +45,64 @@ function gcaa_create_table() {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num, and $block_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
+function arc_pull_data_cpts($comp_num, $task_num, $block_num, $exemplar) {
     global $current_user;
     global $wpdb;
     $db = new arc_judg_db;
-    $resp_args = array(
-        'numberposts' => -1,
-        'post_type' => 'response',
-        'meta_query' => array(
-            'relation' => 'AND',
-            array(
-                'key' => 'block_num',
-                'value' => $block_num,
-                'compare' => '=',
-            ),
-            array(
+    if($exemplar==0) {
+        $resp_args = array(
+            'numberposts' => -1,
+            'post_type' => 'exemplar',
+            'meta_query' =>
+                array(
+                    'relation' => 'AND',
+                    array(
+                        'key' => 'comp_num',
+                        'value' => $comp_num,
+                        'compare' => '=',
+                    ),
+                    array(
+                        'key' => 'task_num',
+                        'value' => $task_num,
+                        'compare' => '=',
+                    ),
+                )
+        );
+    } else {
+        $resp_args = array(
+            'numberposts' => -1,
+            'post_type' => 'response',
+            'meta_query' => array(
                 'relation' => 'AND',
                 array(
-                    'key' => 'comp_num',
-                    'value' => $comp_num,
+                    'key' => 'block_num',
+                    'value' => $block_num,
                     'compare' => '=',
                 ),
                 array(
-                    'key' => 'task_num',
-                    'value' => $task_num,
-                    'compare' => '=',
-                ),
+                    'relation' => 'AND',
+                    array(
+                        'key' => 'comp_num',
+                        'value' => $comp_num,
+                        'compare' => '=',
+                    ),
+                    array(
+                        'key' => 'task_num',
+                        'value' => $task_num,
+                        'compare' => '=',
+                    ),
+                )
             )
-        )
-    );
+        );
+    }
+    
     $all_responses = get_posts($resp_args);
     $responses = [];
     $total = 0;
     $for_assessment = 0;
     foreach($all_responses as $response) {
         $total++;
-        if($current_user->ID == 2) {
+        if($current_user->ID == 1) {
             $responses[] = $response;
         } else {
             $where = "user_id = {$current_user->ID} AND resp_title = '{$response->post_title}' AND judg_type = 'ind'";
@@ -125,6 +147,22 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
         $c_titles[$j] = $competency->post_title;
     }
 
+    $co_args = array(
+        'numberposts' => -1,
+        'post_type' => 'code',
+        'meta_key' => 'comp_num',
+        'meta_value' => $comp_num
+    );
+
+    $codes = get_posts($co_args);
+    foreach($codes as $code) {
+        $j = get_field('code_num',$code->ID);
+        $code_labels[$j] = wp_strip_all_tags($code->post_content);
+    }
+    $num_codes = count($codes);
+    // ddd($code_labels);
+
+
     $data_for_js = array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('gcaa_scores_nonce'),
@@ -134,7 +172,9 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
         'cTitles' => $c_titles,
         'respIds' => $resp_ids,
         'responses' => $resp_contents,
-        'subNums' => $sub_nums
+        'subNums' => $sub_nums,
+        'codeLabels' => $code_labels,
+        'numCodes' => $num_codes
     );
 
     return $data_for_js;

@@ -37,13 +37,15 @@ function gc_assess_arc_enqueue_scripts() {
           $task_num = sanitize_text_field(get_query_var('task_num'));
           $block_num = sanitize_text_field(get_query_var('block_num'));
           $review = sanitize_text_field(get_query_var('review'));;
-          if($review == 'true') {
+          $exemplar = sanitize_text_field(get_query_var('exemplar'));;
+          if($review) {
             $judge1 = sanitize_text_field(get_query_var('judge1'));
             $judge2 = sanitize_text_field(get_query_var('judge2'));
-            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num);
+            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num, $exemplar);
           } else {
-            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $block_num);
+            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $block_num, $exemplar);
           }
+          d($data_for_js);
           $other_data = array(
               'compNum' => $comp_num,
               'taskNum' => $task_num,
@@ -122,6 +124,13 @@ function arc_review_query_vars( $qvars ) {
     return $qvars;
 }
 add_filter( 'query_vars', 'arc_review_query_vars' );
+
+// Add exemplar to url
+function arc_exemplar_query_vars( $qvars ) {
+  $qvars[] = 'exemplar';
+  return $qvars;
+}
+add_filter( 'query_vars', 'arc_exemplar_query_vars' );
 
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');

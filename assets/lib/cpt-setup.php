@@ -85,3 +85,30 @@ function arc_register_cpt_scenario() {
         register_post_type('scenario',$args);
     }
 }
+
+add_action('init',__NAMESPACE__ . '\register_cpt_code');
+/*
+ * Adds the "Code" custom post type
+ */
+function register_cpt_code() {
+    $labels = array(
+        'name' => _x('Codes','codes'),
+        'singular_name' => _x('Code','code'),
+        'all_items' => ('All Codes'),
+        'add_new_item' => ('Add New Code'),
+        'edit_item' => ('Edit Code'),
+        'search_items' => ('Search Codes'),
+        'view_item' => ('View Code'),
+    );
+
+    $args = array(
+        'label' => __('Codes', 'codes'),
+        'labels' => $labels,
+        'public' => true,
+        'taxonomies' => array('category'),
+        'show_in_rest' => true,
+        'supports' => array('title','editor')
+    );
+
+    register_post_type('code',$args);
+}
