@@ -32,22 +32,22 @@ function gcpc_create_table() {
         judg_type tinytext NOT NULL,
 		judg_time time NOT NULL,
         code1 smallint(1) UNSIGNED NOT NULL,
-        excerpt1 longtext,
         code2 smallint(1) UNSIGNED NOT NULL,
-        excerpt2 longtext,
         code3 smallint(1) UNSIGNED NOT NULL,
-        excerpt3 longtext,
         code4 smallint(1) UNSIGNED NOT NULL,
-        excerpt4 longtext,
         code5 smallint(1) UNSIGNED NOT NULL,
-        excerpt5 longtext,
         code6 smallint(1) UNSIGNED NOT NULL,
-        excerpt6 longtext,
         code7 smallint(1) UNSIGNED NOT NULL,
-        excerpt7 longtext,
         code8 smallint(1) UNSIGNED,
-        excerpt8 longtext,
         code9 smallint(1) UNSIGNED,
+        excerpt1 longtext,
+        excerpt2 longtext,
+        excerpt3 longtext,
+        excerpt4 longtext,
+        excerpt5 longtext,
+        excerpt6 longtext,
+        excerpt7 longtext,
+        excerpt8 longtext,
         excerpt9 longtext,
         PRIMARY KEY (judg_id)
 	) $charset_collate;";
@@ -137,14 +137,14 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
         $c_titles[$j] = $competency->post_title;
     }
 
-    $co_args = array(
+    $code_args = array(
         'numberposts' => -1,
         'post_type' => 'code',
         'meta_key' => 'comp_num',
         'meta_value' => $comp_num
     );
 
-    $codes = get_posts($co_args);
+    $codes = get_posts($code_args);
     foreach($codes as $code) {
         $j = get_field('code_num',$code->ID);
         $code_labels[$j] = wp_strip_all_tags($code->post_content);

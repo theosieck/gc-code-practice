@@ -1,19 +1,17 @@
 import ReactHtmlParser from 'react-html-parser';
-import SelectionHighlighter from 'react-highlight-selection';
-
-// const divStyle = {
-//     marginTop: '50px'
-// };
+import Highlightable from 'highlightable';
 
 const PresentResp = (props) => (
     <div>
         <h2>Case: {props.respId}</h2>
-        {//ReactHtmlParser(props.response)
-        }
-        {<SelectionHighlighter
+        <div onMouseUp={() => {props.handleSelection(window.getSelection().toString())}}>{ReactHtmlParser(props.response)}</div>
+        {/*<Highlightable
+            ranges={[{'text':ReactHtmlParser(props.response)}]} 
+            enabled={true}
+            onTextHighlighted={props.handleSelection}
+            highlightStyle={{backgroundColor:'red'}}
             text={ReactHtmlParser(props.response)}
-            selectionHandler={props.handleSelection}
-        />}
+        />*/}
     </div>
 );
 

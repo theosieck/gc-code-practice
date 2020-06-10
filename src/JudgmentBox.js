@@ -8,7 +8,7 @@ import Rows from './Rows'
 class JudgmentBox extends Component {
     state = {
         rows:[],
-        activeCode:'',
+        activeSelect:'',
         clicked:0,
         codes:[0,0,0,0,0,0,0,0,0],
         excerpts:['','','','','','','','','']
@@ -19,37 +19,59 @@ class JudgmentBox extends Component {
     };
 
     handleButton = (code) => {
-        this.state.activeCode = code;
-        const codeKey = code[0]-1
-
-        this.setState(() => ({
-            clicked:code[0],
-            rows:this.state.rows.filter((row) => row.code != code)
-        }))
-
-        this.state.codes[codeKey] = 1 - this.state.codes[codeKey]
-        this.state.excerpts[codeKey] = ''
-    }
-    
-    handleSelection = (e) => {
-        const code = this.state.activeCode;
         if(code) {
             const codeKey = code[0]-1
-            const selection = e.selection;
+            const selection = this.state.activeSelect
             this.setState((prevState) => ({
-                rows: prevState.rows.concat({
+                rows: prevState.rows.filter((row) => row.code != code).concat({
                     'text':selection,
                     'code':code
                 }),
-                clicked:0,
                 activeCode:''
             }))
+            this.state.codes[codeKey] = 1;
             this.state.excerpts[codeKey] = selection;
+            if(document.getSelection) {
+                if(document.getSelection().removeAllRanges) {
+                    document.getSelection().removeAllRanges()
+                } else if(window.getSelection) {
+                    if(window.getSelection().removeAllRanges) {
+                        window.getSelection().removeAllRanges()
+                    } else if(window.getSelection().empty()) {
+                        window.getSelection().empty()
+                    } else {
+                        console.log("no empty function (window)")
+                    }
+                } else {
+                    console.log("no empty function (document.get)")
+                }
+            } else if(document.selection) {
+                if(document.selection.empty) {
+                    document.selection.empty()
+                } else {
+                    console.log("no empty function (document.select)")
+                }
+            } else {
+                console.log("no empty function??")
+            }
         }
+    }
+    
+    handleSelection = (selection) => {
+        this.state.activeSelect = selection
+        // this.state.codes[codeKey] = 0
+        // this.state.excerpts[codeKey] = ''
     }
 
     handleNext = (e) => {
         e.preventDefault();
+        this.setState(() => ({
+            rows:[],
+            activeSelect:'',
+            clicked:0,
+            codes:[0,0,0,0,0,0,0,0,0],
+            excerpts:['','','','','','','','','']
+        }))
         this.props.handleNext(this.state.excerpts,this.state.codes);
     }
 
