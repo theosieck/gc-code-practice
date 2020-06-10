@@ -4,17 +4,13 @@
 const { Component } = wp.element;
 //import './judgmentapp.scss';
 import PresentContext from './PresentContext';
-import PresentResp from './PresentResp';
-import Rationale from './Rationale';
-import Confirm from './Confirm';
 import ShowEnd from './ShowEnd';
-import ShowReview from './ShowReview';
-import Mismatches from './Mismatches';
+import ReviewBox from './ReviewBox';
 import JudgmentBox from './JudgmentBox';
 
 const review = respObj.review == '1';
 const nTrials = respObj.respIds.length;
-const codes = [];
+let codes = [];
 const numCodes = respObj.numCodes;
 for(let i=1;i<=numCodes;i++) {
     codes[i] = respObj.codeLabels[i];
@@ -27,8 +23,8 @@ class JudgmentApp extends Component {
         trial: 1,   // Each judgment is one trial
         respId: respObj.respIds[0],   // The ID of the Response being judged
         startTime: Math.floor(this.startDate / 1000),    // UNIX time on page load, in seconds
-        allDone: false, // Whether the 'ShowEnd' component should be displayed
-        showMatches: review,  // display total number matches
+        allDone: false // Whether the 'ShowEnd' component should be displayed
+        // showMatches: review,  // display total number matches
     };
     // Labels for Response judgments
     levelTitles = {
@@ -115,18 +111,6 @@ class JudgmentApp extends Component {
             respId: respObj.respIds[this.state.trial - 1]
         }));
     }
-    
-    /**
-     * componentDidUpdate: scrolls the webpage so that 'rationale' is in view
-     * Parameters: none
-     * Fires: after the component changes
-     */
-    componentDidUpdate = () => {
-        if ( document.getElementById("rationale") ) {
-            const elDiv = document.getElementById("rationale");
-            elDiv.scrollIntoView();
-        }
-    }
 
     saveData = (dataObj,key = null) => {
         dataObj.action = 'arc_save_data';
@@ -159,36 +143,13 @@ class JudgmentApp extends Component {
     }
 
     /**
-     * Determines whether to save the matched cases, lets the user move on to reviewing disagreements.
-     */
-    saveMatches = (saveBool) => {
-        // if the user wants to save, make an ajax request to save the matched cases
-        // if(saveBool) {
-        //     console.log('sending request...');
-        //     respObj.matches.forEach((match) => this.saveData(match));
-        // }
-
-        // move on to reviewing disagreements
-        this.setState(() => ({
-            showMatches: false
-        }));
-    }
-
-    /**
      * Renders the components for JudgmentApp
      */
     render() {
         return (
             <div>
                 { this.state.allDone && <ShowEnd />}
-                {(!this.state.allDone && this.state.showMatches) &&
-                    <Mismatches
-                        disagreements={respObj.disagreements}
-                        total={respObj.total}
-                        saveMatches={this.saveMatches}
-                    />
-                }
-                {(!this.state.allDone && !this.state.showMatches) &&
+                {!this.state.allDone &&
                     <PresentContext 
                         scenario={respObj.sContent}
                         competencies={respObj.cDefinitions}
@@ -197,12 +158,22 @@ class JudgmentApp extends Component {
                         cTitle={respObj.cTitles[0]}
                     />
                 }
-                { (!this.state.allDone && !this.state.showMatches) &&
+                { (!this.state.allDone && !review) &&
                     <JudgmentBox
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }
                         codes={codes}
                         handleNext={this.handleNext}
+                    />
+                }
+                { (!this.state.allDone && review) && 
+                    <ReviewBox
+                        respId={ this.state.respId }
+                        response={ respObj.responses[this.state.respId] }
+                        codes={codes}
+                        handleNext={this.handleNext}
+                        reviewSet={respObj.reviewSet[respObj.subNums[this.state.trial-1]]}
+                        matches={respObj.matches[respObj.subNums[this.state.trial-1]]}
                     />
                 }
             </div>

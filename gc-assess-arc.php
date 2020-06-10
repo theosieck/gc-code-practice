@@ -53,6 +53,7 @@ function gc_assess_arc_enqueue_scripts() {
           if(is_array($data_for_js)) {
             // there were no errors in pulling the data
             $data_for_js = array_merge($data_for_js,$other_data);
+            d($data_for_js);
             // pass exemplars, scenarios, and competencies to Judgment App
             wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
           } else {

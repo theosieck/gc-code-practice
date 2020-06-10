@@ -49,6 +49,8 @@ function gcpc_create_table() {
         excerpt7 longtext,
         excerpt8 longtext,
         excerpt9 longtext,
+        rater1 mediumint(9) UNSIGNED,
+        rater2 mediumint(9) UNSIGNED,
         PRIMARY KEY (judg_id)
 	) $charset_collate;";
 
@@ -96,7 +98,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
             $responses[] = $response;
         } else {
             $where = "user_id = {$current_user->ID} AND resp_title = '{$response->post_title}' AND judg_type = 'ind'";
-            $data = $db->get_all($where);
+            $data = $db->get_all_obj($where);
             if(empty($data)) {
                 $responses[] = $response;
                 $for_assessment++;
@@ -173,7 +175,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num, $block_num, user ids.
  */
-function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num) {
+function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
     global $current_user;
     global $wpdb;
 
@@ -181,16 +183,13 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
 
     // get all the data for the given comp and task nums
     $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
-    $all_data = $db->get_all($where);
+    $all_data = $db->get_all_arraya($where);
     // organize the data into a multi-dimensional array where the key is the subject number and the value is
     // an array of all the db lines for that subject, indexed by user id
     $all_subs = [];
     foreach ($all_data as $sub) {
-        // filter by block_num
-        if(get_page_by_title($sub->resp_title, 'OBJECT', 'response')->block_num == $block_num) {
-            // this only keeps the most recent judgement for the given user id
-            $all_subs[$sub->sub_num][$sub->user_id] = $sub;
-        }
+        // this only keeps the most recent judgement for the given user id
+        $all_subs[$sub['sub_num']][$sub['user_id']] = $sub;
     }
     if(empty($all_subs)) {
         return "Need assessments from both raters";
@@ -198,61 +197,40 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
     // filter the db lines so that the subjects that have not yet been reviewed and have more than one
     // response are added to the review set
     $review_set = [];
-    $review_titles = [];
     $matches = [];
-    $disagreements = 0;
-    $total = 0;
     foreach($all_subs as $sub) {
-        $total++;
-        // check that both raters/judges have completed the relevant block of cases
-        // -- entire block must be completed by each judge
-        if(($sub[$judge1]==NULL) || ($sub[$judge2]==NULL)) {
-            // one or both judges have not completed this block
-            return "Need assessments from both raters";
-        } else {
-            // both judges have completed this block
-            // only add to the set the pairs of judg_levels that are different
-            if($sub[$judge1]->judg_level != $sub[$judge2]->judg_level) {
-                $disagreements++;
-                $sub_num = $sub[$judge1]->sub_num;
-                $review_set[$sub_num] = array(
-                    'sub_num' => $sub_num,
-                    'judg_level_1' => $sub[$judge1]->judg_level,
-                    'judg_level_2' => $sub[$judge2]->judg_level,
-                    'rationale_1' => $sub[$judge1]->rationale,
-                    'rationale_2' => $sub[$judge2]->rationale
-                );
-                $response = get_page_by_title($sub[$judge1]->resp_title, 'OBJECT', 'response');
-                $resp_id = $response->ID;
-                $resp_ids[] = $resp_id;
-                $sub_nums[] = $sub_num;
-                $resp_contents[$resp_id] = trim($response->post_content, '""');
-            } else {
-                // check if data has already been saved to database
-                $where = "resp_title = '{$sub[$judge1]->resp_title}' AND judg_type = 'rev'";
-                $all_data = $db->get_all($where);
-                if(empty($all_data)) {
-                    // save this sub to db
-                    $match_data = array(
-                        'user_id' => $judge1,
-                        'sub_num' => $sub[$judge1]->sub_num,
-                        'comp_num' => $sub[$judge1]->comp_num,
-                        'task_num' => $sub[$judge1]->task_num,
-                        'resp_title' => $sub[$judge1]->resp_title,
-                        'judg_type' => 'rev',
-                        'judg_level' => $sub[$judge1]->judg_level,
-                        'judg_time'  => $sub[$judge1]->judg_time,
-                        'rationale' => $sub[$judge1]->rationale
-                    );
-                    $db->insert($match_data);
+        $sub_num = $sub[$judge1]['sub_num']; // get the subject number
+        // check if both judges have assessed this subject
+        if($sub[$judge1] && $sub[$judge2]) {
+            // get the response information for this subject
+            $title = $sub[$judge1]['resp_title'];
+            $response = get_page_by_title($title, 'OBJECT', 'exemplar');
+            $resp_id = $response->ID;
+            $resp_ids[] = $resp_id;
+            $sub_nums[] = $sub_num;
+            $resp_contents[$resp_id] = trim($response->post_content, '""');
+
+            // sort codes for this subject into matches and reviews
+            for($i=1;$i<10;$i++) {
+                $code_num = 'code' . $i;
+                // ignore codes that don't exist
+                if($sub[$judge1][$code_num]==NULL) {
+                break;
+                }
+                $excerpt_num = 'excerpt' . $i;
+
+                if(intval($sub[$judge1][$code_num])===intval($sub[$judge2][$code_num])) {
+                    $matches[$sub_num][$i] = [$sub[$judge1][$excerpt_num], $sub[$judge2][$excerpt_num]];
+                } else if(intval($sub[$judge1][$code_num])===1) {
+                    $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
+                } else {
+                    $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
                 }
             }
+        } else {
+            echo `Need ratings from both judges for subject {$sub_num}.`;
         }
     }
-    if(empty($review_set)) {
-        return "All level ratings for these two judges matched. No disagreements found.";
-    }
-    echo "{$disagreements} disagreements out of {$total} total cases.";
 
     $s_args = array(
         'post_type' => 'scenario',
@@ -277,6 +255,20 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
         $c_titles[$j] = $competency->post_title;
     }
 
+    $code_args = array(
+        'numberposts' => -1,
+        'post_type' => 'code',
+        'meta_key' => 'comp_num',
+        'meta_value' => $comp_num
+    );
+
+    $codes = get_posts($code_args);
+    foreach($codes as $code) {
+        $j = get_field('code_num',$code->ID);
+        $code_labels[$j] = wp_strip_all_tags($code->post_content);
+    }
+    $num_codes = count($codes);
+
     $data_for_js = array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('gcaa_scores_nonce'),
@@ -288,8 +280,9 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
         'responses' => $resp_contents,
         'subNums' => $sub_nums,
         'reviewSet' => $review_set,
-        'disagreements' => $disagreements,
-        'total' => $total
+        'matches' => $matches,
+        'codeLabels' => $code_labels,
+        'numCodes' => $num_codes
     );
     return $data_for_js;
 }
@@ -370,10 +363,16 @@ class arc_judg_db {
         return $wpdb->get_results( $sql );
     }
 
-    static function get_all($where) {
+    static function get_all_obj($where) {
         global $wpdb;
         $sql   = "SELECT * FROM " . self::_table() . " WHERE {$where}";
         return $wpdb->get_results( $sql );
+    }
+
+    static function get_all_arraya($where) {
+        global $wpdb;
+        $sql   = "SELECT * FROM " . self::_table() . " WHERE {$where}";
+        return $wpdb->get_results( $sql, 'ARRAY_A' );
     }
 
 

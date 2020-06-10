@@ -3,13 +3,12 @@ const { Component } = wp.element;
 import Grid from '@material-ui/core/Grid';
 import PresentResp from './PresentResp';
 import Codes from './Codes';
-import Rows from './Rows'
+import Rows from './Rows';
 
 class JudgmentBox extends Component {
     state = {
         rows:[],
         activeSelect:'',
-        clicked:0,
         codes:[0,0,0,0,0,0,0,0,0],
         excerpts:['','','','','','','','','']
     }
@@ -34,33 +33,19 @@ class JudgmentBox extends Component {
             if(document.getSelection) {
                 if(document.getSelection().removeAllRanges) {
                     document.getSelection().removeAllRanges()
-                } else if(window.getSelection) {
-                    if(window.getSelection().removeAllRanges) {
-                        window.getSelection().removeAllRanges()
-                    } else if(window.getSelection().empty()) {
-                        window.getSelection().empty()
-                    } else {
-                        console.log("no empty function (window)")
-                    }
-                } else {
-                    console.log("no empty function (document.get)")
                 }
             } else if(document.selection) {
                 if(document.selection.empty) {
                     document.selection.empty()
-                } else {
-                    console.log("no empty function (document.select)")
                 }
             } else {
-                console.log("no empty function??")
+                console.log("no empty function")
             }
         }
     }
     
     handleSelection = (selection) => {
         this.state.activeSelect = selection
-        // this.state.codes[codeKey] = 0
-        // this.state.excerpts[codeKey] = ''
     }
 
     handleNext = (e) => {
@@ -97,9 +82,7 @@ class JudgmentBox extends Component {
                 </Grid>
                 </div>
                 <div style={this.divStyle}>
-                <Rows
-                    rows={this.state.rows}
-                />
+                <Rows rows={this.state.rows} />
                 </div>
                 <button onClick={this.handleNext}>Next</button>
             </div>
