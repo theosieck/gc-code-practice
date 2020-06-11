@@ -2,7 +2,7 @@ const { Component } = wp.element;
 
 import ReactHtmlParser from 'react-html-parser';
 import Matches from './Matches'
-import ReviewSet from './ReviewSet'
+import ReviewComp from './ReviewComp'
 
 class ReviewBox extends Component {
     state = {
@@ -12,7 +12,7 @@ class ReviewBox extends Component {
 
     divStyle = {marginTop: '50px'}
 
-    handleButton = (e) => {
+    handleSingles = (e) => {
         e.preventDefault();
         const codeNum = parseInt(e.target.textContent[0]);
         this.setState((prevState) => ({
@@ -29,11 +29,21 @@ class ReviewBox extends Component {
         excerpts.forEach((excerpt,i) => excerpt ? clicked[i] = 1 : excerpts[i] = '')
         this.state.clicked = [0,0,0,0,0,0,0,0,0,0];
         this.state.matchExcerpts = []
+        // console.log(excerpts)
+        // console.log(clicked)
         this.props.handleNext(excerpts,clicked)
     }
 
-    setMatches = (matches) => {
-        matches.forEach((match,i) => this.state.matchExcerpts[i] = (match[0][1].length < match[1][1].length ? match[0][1] : match[1][1]))
+    handleMatches = (e) => {
+        const text = e.target.textContent
+        const codeNum = parseInt(text[0]);
+        const excerptNum = parseInt(text[text.length-1])
+        console.log(codeNum, excerptNum)
+        console.log(this.props.matches)
+        this.setState((prevState) => ({
+            clicked: prevState.clicked.map((num,i) => i==codeNum ? (num==excerptNum+1 ? 0 : excerptNum+1) : num)
+        }))
+        this.state.matchExcerpts[codeNum] = this.props.matches[codeNum][excerptNum-1]
     }
 
     render() {
@@ -44,17 +54,19 @@ class ReviewBox extends Component {
                 {ReactHtmlParser(this.props.response)}
             </div>
             <div style={this.divStyle}>
-                <ReviewSet 
+                <ReviewComp 
                     codes={this.props.codes}
-                    reviewSet={this.props.reviewSet}
-                    handleButton={this.handleButton}
+                    excerpts={this.props.reviewSet}
+                    handleButton={this.handleSingles}
                     state={this.state}
                 />
-                <Matches
+                {<Matches
                     codes={this.props.codes}
                     matches={this.props.matches}
-                    setMatches={this.setMatches}
+                    handleButton={this.handleMatches}
+                    state={this.state}
                 />
+                }
             </div>
                 <button onClick={this.handleNext}>Next</button>
             </div>

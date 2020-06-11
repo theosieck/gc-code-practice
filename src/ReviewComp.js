@@ -2,21 +2,21 @@ import Button from '@material-ui/core/Button';
 import Row from './Row';
 
 
-const genCodes = (codes,reviewSet) => {
+const genCodes = (codes,excerpts) => {
     const codeArray = [];
     for(let i=1;i<=codes.length;i++) {
-        if(reviewSet[i]) {
-            codeArray[i] = [codes[i],reviewSet[i]];
+        if(excerpts[i]) {
+            codeArray[i] = [codes[i],excerpts[i]];
         }
     }
     return codeArray;
 }
 
-const ReviewSet = (props) => {
-    let codes = genCodes(props.codes,props.reviewSet)
+const ReviewComp = (props) => {
+    let codes = genCodes(props.codes,props.excerpts)
     return (
         <div>
-        <h2>Singles:</h2>
+        <h2>Singles</h2>
         {(codes.length>0) && codes.map((code,codeNum) => (
             <Row
                 code={<Button
@@ -28,7 +28,6 @@ const ReviewSet = (props) => {
                         </Button>
                 }
                 selection={code[1]}
-                review={true}
             />
         ))}
         {(codes.length<=0) && <p>No singles to review.</p>}
@@ -36,4 +35,4 @@ const ReviewSet = (props) => {
     )
 }
 
-export default ReviewSet;
+export default ReviewComp;

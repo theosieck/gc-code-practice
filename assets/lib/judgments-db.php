@@ -94,16 +94,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
     $for_assessment = 0;
     foreach($all_responses as $response) {
         $total++;
-        if($current_user->ID == 1) {
-            $responses[] = $response;
-        } else {
-            $where = "user_id = {$current_user->ID} AND resp_title = '{$response->post_title}' AND judg_type = 'ind'";
-            $data = $db->get_all_obj($where);
-            if(empty($data)) {
-                $responses[] = $response;
-                $for_assessment++;
-            }
-        }
+        $responses[] = $response;
     }
     if(empty($responses)) {
         return "You have assessed all the responses for this block.";
