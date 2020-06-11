@@ -282,7 +282,8 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
         'reviewSet' => $review_set,
         'matches' => $matches,
         'codeLabels' => $code_labels,
-        'numCodes' => $num_codes
+        'numCodes' => $num_codes,
+        'judges' => [$judge1,$judge2]
     );
     return $data_for_js;
 }

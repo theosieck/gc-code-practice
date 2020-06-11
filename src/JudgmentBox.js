@@ -9,8 +9,8 @@ class JudgmentBox extends Component {
     state = {
         rows:[],
         activeSelect:'',
-        codes:[0,0,0,0,0,0,0,0,0],
-        excerpts:['','','','','','','','','']
+        codes:[0,0,0,0,0,0,0,0,0,0],
+        excerpts:['','','','','','','','','','']
     }
 
     divStyle = {
@@ -19,14 +19,14 @@ class JudgmentBox extends Component {
 
     handleButton = (code) => {
         if(code) {
-            const codeKey = code[0]-1
-            const selection = this.state.activeSelect
+            const codeKey = code[0]
+            const selection = this.state.activeSelect ? this.state.activeSelect : 'No selection'
             this.setState((prevState) => ({
                 rows: prevState.rows.filter((row) => row.code != code).concat({
                     'text':selection,
                     'code':code
                 }),
-                activeCode:''
+                activeSelect:''
             }))
             this.state.codes[codeKey] = 1;
             this.state.excerpts[codeKey] = selection;
@@ -48,12 +48,21 @@ class JudgmentBox extends Component {
         this.state.activeSelect = selection
     }
 
+    handleDelete = (e) => {
+        e.preventDefault()
+        const code = e.target.id
+        this.setState((prevState) => ({
+            rows: prevState.rows.filter((row) => row.code[0] != code),
+            excerpts: prevState.excerpts.filter((excerpt,i) => i != code),
+            codes: prevState.codes.filter((num,i) => i != code)
+        }))
+    }
+
     handleNext = (e) => {
         e.preventDefault();
         this.setState(() => ({
             rows:[],
             activeSelect:'',
-            clicked:0,
             codes:[0,0,0,0,0,0,0,0,0],
             excerpts:['','','','','','','','','']
         }))
@@ -82,7 +91,11 @@ class JudgmentBox extends Component {
                 </Grid>
                 </div>
                 <div style={this.divStyle}>
-                <Rows rows={this.state.rows} />
+                <Rows 
+                    rows={this.state.rows}
+                    handleDelete={this.handleDelete}
+                    showDelete={true}
+                />
                 </div>
                 <button onClick={this.handleNext}>Next</button>
             </div>

@@ -1,7 +1,5 @@
 body {
-  background: #ddd;
-}
+  background: #ddd; }
 
-::placeholder {
-  color: gray;
-}
+button:active {
+  border: none; }

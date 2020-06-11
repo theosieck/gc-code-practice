@@ -154,6 +154,7 @@ function arc_save_data() {
     $judg_type = $_POST['judg_type'];
     $judg_time = $_POST['judg_time'];
     $codes = $_POST['codes'];
+    $judges = $_POST['judges'];
 
     if($judg_time>=60) {
         $judg_time = date("H:i:s", mktime(0, 0, $judg_time));
@@ -192,7 +193,9 @@ function arc_save_data() {
         'code8' => $codes[8][0],
         'excerpt8' => $codes[8][1],
         'code9' => $codes[9][0],
-        'excerpt9' => $codes[9][1]
+        'excerpt9' => $codes[9][1],
+        'rater1' => $judges[0],
+        'rater2' => $judges[1]
     );
 
     $success = $db->insert($db_data);

@@ -12,23 +12,28 @@ const genCodes = (codes,reviewSet) => {
     return codeArray;
 }
 
-const ReviewSet = (props) => (
-    <div>
-    <h2>Singles:</h2>
-    {genCodes(props.codes,props.reviewSet).map((code,codeNum) => (
-        <Row
-            code={<Button
-                        variant={props.state.clicked[codeNum-1]==1 ? "contained" : "outlined"}
-                        onClick={props.handleButton}
-                        style={{display:'block'}}
-                    >
-                        {codeNum}. {code[0]}
-                    </Button>
-            }
-            selection={code[1]}
-        />
-    ))}
-    </div>
-)
+const ReviewSet = (props) => {
+    let codes = genCodes(props.codes,props.reviewSet)
+    return (
+        <div>
+        <h2>Singles:</h2>
+        {(codes.length>0) && codes.map((code,codeNum) => (
+            <Row
+                code={<Button
+                            variant={props.state.clicked[codeNum]==1 ? "contained" : "outlined"}
+                            onClick={props.handleButton}
+                            style={{display:'block'}}
+                        >
+                            {codeNum}. {code[0]}
+                        </Button>
+                }
+                selection={code[1]}
+                review={true}
+            />
+        ))}
+        {(codes.length<=0) && <p>No singles to review.</p>}
+        </div>
+    )
+}
 
 export default ReviewSet;

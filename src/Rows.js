@@ -12,6 +12,8 @@ const Rows = (props) => (
         <Row 
             selection={row.text}
             code={row.code}
+            handleDelete={props.handleDelete}
+            showDelete={true}
         />
     ))}
     </div>
