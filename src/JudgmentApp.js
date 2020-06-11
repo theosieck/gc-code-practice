@@ -40,11 +40,8 @@ class JudgmentApp extends Component {
      * Fires: when the user clicks the 'Next' button
      */
     handleNext = (excerpts,codes) => {
-        // console.log(this.state.respId)
-
         // Check whether the user has finished all the trials
         if (this.state.trial < nTrials) {
-            // console.log(this.state.trial)
             this.setState((prevState) => ({
                 trial: prevState.trial + 1
             }),
@@ -55,8 +52,6 @@ class JudgmentApp extends Component {
                 allDone: true
             }));
         }
-
-        // console.log(this.state.respId)
 
         const endDate = Date.now();
         const endTime = Math.floor(endDate / 1000);
@@ -75,8 +70,6 @@ class JudgmentApp extends Component {
             judg_type: review ? 'rev' : 'ind',
             judg_time: judgTime,
             codes: codesArray,
-            // codes: codes
-            // excerpts: excerpts,
             judges: respObj.judges
         };
         // console.log(dataObj)
@@ -84,19 +77,19 @@ class JudgmentApp extends Component {
         // Save to DB
         this.saveData(dataObj);
         // // Check if there's anything in localStorage - if yes, try to push to DB
-        // if(localStorage.length != 0) {
-        //     var keys = Object.keys(localStorage);
-        //     keys.forEach((key) => {
-        //         if(localStorage.getItem(key)!=null && localStorage.getItem(key)!=undefined && localStorage.getItem(key)!="") {
-        //             var localObj = JSON.parse(localStorage.getItem(key));
-        //             localObj._ajax_nonce = respObj.nonce;
-        //             // Save to DB
-        //             this.saveData(localObj,key); 
-        //         } else {
-        //             console.log(typeof key);
-        //         }   
-        //     } );
-        // }
+        if(localStorage.length != 0) {
+            var keys = Object.keys(localStorage);
+            keys.forEach((key) => {
+                if(localStorage.getItem(key)!=null && localStorage.getItem(key)!=undefined && localStorage.getItem(key)!="") {
+                    var localObj = JSON.parse(localStorage.getItem(key));
+                    localObj._ajax_nonce = respObj.nonce;
+                    // Save to DB
+                    this.saveData(localObj,key); 
+                } else {
+                    console.log(typeof key);
+                }   
+            } );
+        }
 
         // Set new start time
         const newStartDate = Date.now();
@@ -122,8 +115,6 @@ class JudgmentApp extends Component {
         dataObj.action = 'arc_save_data';
         dataObj._ajax_nonce = respObj.nonce;
 
-        console.log(dataObj)
-
         jQuery.ajax({
             type : 'post',
             dataType: 'json',
@@ -131,14 +122,12 @@ class JudgmentApp extends Component {
             data : dataObj,
             error : function( response ) {
                 console.log("something went wrong (error case)");
-                // console.log(response)
                 // save to localStorage
                 localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
             },
             success : function( response ) {
                 console.log(response.data)
-                if( response.type == 'success') {
-                    // && dataObj.sub_num == response.data.sub_num
+                if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
                     console.log('success!');
                     if(key) {
                         localStorage.removeItem(key);

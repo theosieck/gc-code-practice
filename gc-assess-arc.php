@@ -201,7 +201,7 @@ function arc_save_data() {
     $success = $db->insert($db_data);
     if($success) {
       $response['type'] = 'success';
-      $data = $db->get_all("user_id = {$current_user->ID} AND resp_title = '{$title}'");
+      $data = $db->get_all_obj("user_id = {$current_user->ID} AND resp_title = '{$title}'");
       $response['data'] = $data[count($data)-1];
     } else {
       $response['type'] = $success;
