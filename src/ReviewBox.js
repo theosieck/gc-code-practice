@@ -18,7 +18,6 @@ class ReviewBox extends Component {
         this.setState((prevState) => ({
             clicked: prevState.clicked.map((num,i) => i==codeNum ? (1 - num) : num)
         }))
-        // this.state.clicked[codeNum] = ;
     }
 
     handleNext = (e) => {
@@ -29,8 +28,6 @@ class ReviewBox extends Component {
         excerpts.forEach((excerpt,i) => excerpt ? clicked[i] = 1 : excerpts[i] = '')
         this.state.clicked = [0,0,0,0,0,0,0,0,0,0];
         this.state.matchExcerpts = []
-        // console.log(excerpts)
-        // console.log(clicked)
         this.props.handleNext(excerpts,clicked)
     }
 
@@ -38,8 +35,6 @@ class ReviewBox extends Component {
         const text = e.target.textContent
         const codeNum = parseInt(text[0]);
         const excerptNum = parseInt(text[text.length-1])
-        console.log(codeNum, excerptNum)
-        console.log(this.props.matches)
         this.setState((prevState) => ({
             clicked: prevState.clicked.map((num,i) => i==codeNum ? (num==excerptNum+1 ? 0 : excerptNum+1) : num)
         }))

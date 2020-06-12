@@ -126,7 +126,6 @@ class JudgmentApp extends Component {
                 localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
             },
             success : function( response ) {
-                console.log(response.data)
                 if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
                     console.log('success!');
                     if(key) {

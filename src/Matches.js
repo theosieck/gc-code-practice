@@ -20,7 +20,7 @@ const Matches = (props) => {
     let matches = genMatches(props.codes,props.matches,props.setMatches);
     const numMatches = matches[0]
     let displayed = 0;
-    console.log(matches)
+    console.log(numMatches)
     return (
         <div style={{marginTop: '50px'}}>
         <h2>Matches:</h2>
@@ -53,12 +53,11 @@ const Matches = (props) => {
                         selection={match[1][1]}
                     />
                     {(displayed<numMatches) && <div style={{borderBottom:'1px solid lightgray'}}></div>}
-                
-                    {(numMatches<=0) && <p>No matches to display.</p>}
                     </div>
                 )
             }
         })}
+        {(numMatches<=0) && <p>No matches to display.</p>}
         </div>
     )
 }

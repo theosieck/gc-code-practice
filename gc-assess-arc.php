@@ -19,7 +19,7 @@ register_activation_hook(__FILE__,'gcpc_create_table'); // this function call ha
 
 function gc_assess_arc_enqueue_scripts() {
 
-  if( is_page( 'competency-assessment' ) ) {
+  if( is_page( 'exemplar-assessment' ) ) {
 
       global $current_user;
       get_currentuserinfo();
@@ -35,15 +35,14 @@ function gc_assess_arc_enqueue_scripts() {
 
           $comp_num = sanitize_text_field(get_query_var('comp_num'));
           $task_num = sanitize_text_field(get_query_var('task_num'));
-          $block_num = sanitize_text_field(get_query_var('block_num'));
           $review = sanitize_text_field(get_query_var('review'));;
           // $exemplar = sanitize_text_field(get_query_var('exemplar'));;
           if($review) {
             $judge1 = sanitize_text_field(get_query_var('judge1'));
             $judge2 = sanitize_text_field(get_query_var('judge2'));
-            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num);
+            $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num);
           } else {
-            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $block_num);
+            $data_for_js = arc_pull_data_cpts($comp_num, $task_num);
           }
           $other_data = array(
               'compNum' => $comp_num,
@@ -53,7 +52,7 @@ function gc_assess_arc_enqueue_scripts() {
           if(is_array($data_for_js)) {
             // there were no errors in pulling the data
             $data_for_js = array_merge($data_for_js,$other_data);
-            d($data_for_js);
+            // d($data_for_js);
             // pass exemplars, scenarios, and competencies to Judgment App
             wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
           } else {

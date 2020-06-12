@@ -61,9 +61,9 @@ function gcpc_create_table() {
 }
 
 /*
- * Pulls relevant data from the CPTs using given $comp_num, $task_num, and $block_num.
+ * Pulls relevant data from the CPTs using given $comp_num, $task_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
+function arc_pull_data_cpts($comp_num, $task_num) {
     global $current_user;
     global $wpdb;
 
@@ -96,9 +96,9 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
         $total++;
         $responses[] = $response;
     }
-    if(empty($responses)) {
-        return "You have assessed all the responses for this block.";
-    }
+    // if(empty($responses)) {
+    //     return "You have assessed all the responses for this block.";
+    // }
     shuffle($responses);
     foreach ($responses as $response) {
         $resp_id = $response->ID;
@@ -164,7 +164,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
 }
 
 /*
- * Pulls relevant data from the CPTs using given $comp_num, $task_num, $block_num, user ids.
+ * Pulls relevant data from the CPTs using given $comp_num, $task_num, user ids.
  */
 function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
     global $current_user;
