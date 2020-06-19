@@ -52,7 +52,6 @@ function gc_assess_arc_enqueue_scripts() {
           if(is_array($data_for_js)) {
             // there were no errors in pulling the data
             $data_for_js = array_merge($data_for_js,$other_data);
-            // d($data_for_js);
             // pass exemplars, scenarios, and competencies to Judgment App
             wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
           } else {
@@ -81,6 +80,80 @@ function gc_assess_arc_enqueue_styles() {
 
 }
 add_action( 'wp_enqueue_scripts', 'gc_assess_arc_enqueue_styles' );
+
+/**
+ * Display current judgment progress
+ */
+function gcpc_display_progress() {
+  if(is_page('exemplar-assessment-progress')) {
+    global $wpdb;
+    $posts_table = $wpdb->prefix . 'posts';
+    $db = new arc_judg_db;
+    $judgments_table = $db->get_name();
+
+    // get array of competencies
+    $sql = "SELECT DISTINCT `post_title` FROM `{$posts_table}` WHERE `post_title` LIKE '%-Overall' AND `post_status` = 'publish' AND `post_type` = 'competency' ORDER BY `ID`";
+    $competencies = $wpdb->get_results($sql);
+    // get array of scenario titles
+    $sql = "SELECT DISTINCT `post_title` FROM `{$posts_table}` WHERE `post_title` NOT LIKE '0-%' AND `post_status` = 'publish' AND `post_type` = 'scenario'";
+    $task_objs = $wpdb->get_results($sql);
+    $tasks = [];
+    foreach($task_objs as $task_obj) {
+      $task_name = $task_obj->post_title;
+      $task_num = substr($task_name,0,strpos($task_name,'-'));
+      $tasks[$task_num] = $task_name;
+    }
+    // get array of exemplars
+    $sql = "SELECT DISTINCT `post_title` FROM `{$posts_table}` WHERE `post_title` LIKE '%sub%' AND `post_status` = 'publish' AND `post_type` = 'exemplar'";
+    $total_responses = $wpdb->get_results($sql);
+
+    // find each task-competency pair
+    $ct_pairs = [];
+    foreach($total_responses as $resp_obj) {
+      $resp_str = $resp_obj->post_title;
+      $comp_num = substr($resp_str,1,strpos($resp_str,'-')-1);
+      $ct_pair = substr($resp_str,0,strpos($resp_str,'-',4));
+      if(!is_array($ct_pairs[$comp_num]) || !in_array($ct_pair, $ct_pairs[$comp_num])) {
+        $ct_pairs[$comp_num][] = $ct_pair;
+      }
+    }
+
+    // iterate over competencies
+    foreach($competencies as $comp_obj) {
+      // get competency name and number
+      $comp_str = $comp_obj->post_title;
+      $comp_name = substr($comp_str,0,strpos($comp_str,'-Overall'));
+      $comp_num = substr($comp_str,0,strpos($comp_str,'-'));
+
+      // print competency name
+      echo "<h3>Competency {$comp_name}</h3>";
+      
+      // iterate over ct_pairs
+      foreach($ct_pairs[$comp_num] as $ct_pair) {
+        // print scenario name
+        $ind = strpos($ct_pair,'t')+1;
+        $task_num = substr($ct_pair,$ind,strlen($ct_pair)-$ind);
+        echo "<b>Scenario {$tasks[$task_num]}</b><br />";
+
+        // get total number of exemplars
+        $sql = "SELECT DISTINCT `post_title` FROM `{$posts_table}` WHERE `post_title` LIKE '{$ct_pair}-%' AND `post_status` = 'publish' AND `post_type` = 'exemplar'";
+        $total_responses = count($wpdb->get_results($sql));
+        // get total number of coded responses
+        $sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%'";
+        $num_coded_responses = count($wpdb->get_results($sql));
+        // get total number of reviewed responses
+        $sql .= " AND `judg_type` = 'rev'";
+        $num_reviewed_responses = count($wpdb->get_results($sql));
+
+        // print counts
+        echo "{$total_responses} exemplars to code.<br />" . PHP_EOL;
+        echo "{$num_coded_responses} coded exemplars.<br />" . PHP_EOL;
+        echo "{$num_reviewed_responses} reviewed exemplars.<br /><br />" . PHP_EOL;
+      }
+    }
+  }
+}
+add_action('genesis_entry_content','gcpc_display_progress');
 
 // Add judge1 to url
 function arc_judge1_query_vars( $qvars ) {
@@ -111,11 +184,11 @@ function arc_task_query_vars( $qvars ) {
 add_filter( 'query_vars', 'arc_task_query_vars' );
 
 // Add block_num to url
-function arc_block_query_vars( $qvars ) {
-  $qvars[] = 'block_num';
-  return $qvars;
-}
-add_filter( 'query_vars', 'arc_block_query_vars' );
+// function arc_block_query_vars( $qvars ) {
+//   $qvars[] = 'block_num';
+//   return $qvars;
+// }
+// add_filter( 'query_vars', 'arc_block_query_vars' );
 
 // Add review to url
 function arc_review_query_vars( $qvars ) {
@@ -154,6 +227,7 @@ function arc_save_data() {
     $judg_time = $_POST['judg_time'];
     $codes = $_POST['codes'];
     $judges = $_POST['judges'];
+    $code_scheme = $_POST['code_scheme'];
 
     if($judg_time>=60) {
         $judg_time = date("H:i:s", mktime(0, 0, $judg_time));
@@ -175,6 +249,7 @@ function arc_save_data() {
         'resp_title' => $title,
         'judg_type' => $judg_type,
         'judg_time'  => $judg_time,
+        'code_scheme' => $code_scheme,
         'code1' => $codes[1][0],
         'excerpt1' => $codes[1][1],
         'code2' => $codes[2][0],

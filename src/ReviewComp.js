@@ -22,7 +22,8 @@ const ReviewComp = (props) => {
                 code={<Button
                             variant={props.state.clicked[codeNum]==1 ? "contained" : "outlined"}
                             onClick={props.handleButton}
-                            style={{display:'block'}}
+                            style={{display:'block',
+                                    fontSize: '14px'}}
                         >
                             {codeNum}. {code[0]}
                         </Button>

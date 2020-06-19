@@ -26,7 +26,8 @@ class Codes extends Component {
                     <Button
                         variant="outlined"
                         style={{marginBottom: '5px',
-                                display: 'block'}}
+                                display: 'block',
+                                fontSize: '14px'}}
                         onClick={this.handleButton}
                     >
                         {i}. {code}

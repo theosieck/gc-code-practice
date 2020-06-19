@@ -70,7 +70,8 @@ class JudgmentApp extends Component {
             judg_type: review ? 'rev' : 'ind',
             judg_time: judgTime,
             codes: codesArray,
-            judges: respObj.judges
+            judges: respObj.judges,
+            code_scheme: respObj.codeScheme
         };
         // console.log(dataObj)
 
