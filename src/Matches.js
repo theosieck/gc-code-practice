@@ -20,7 +20,6 @@ const Matches = (props) => {
     let matches = genMatches(props.codes,props.matches,props.setMatches);
     const numMatches = matches[0]
     let displayed = 0;
-    console.log(numMatches)
     return (
         <div style={{marginTop: '50px'}}>
         <h2>Matches:</h2>
@@ -34,7 +33,8 @@ const Matches = (props) => {
                                     variant={props.state.clicked[codeNum]==2 ? "contained" : "outlined"}
                                     onClick={props.handleButton}
                                     id={0}
-                                    style={{display:'block'}}
+                                    style={{display:'block',
+                                            fontSize: '14px'}}
                                 >
                                     {codeNum}. {match[0][0]} - 1
                                 </Button>
@@ -45,7 +45,8 @@ const Matches = (props) => {
                         code={<Button
                                     variant={props.state.clicked[codeNum]==3 ? "contained" : "outlined"}
                                     onClick={props.handleButton}
-                                    style={{display:'block'}}
+                                    style={{display:'block',
+                                            fontSize: '14px'}}
                                 >
                                     {codeNum}. {match[1][0]} - 2
                                 </Button>

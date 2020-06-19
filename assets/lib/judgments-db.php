@@ -31,6 +31,7 @@ function gcpc_create_table() {
 		resp_title tinytext NOT NULL,
         judg_type tinytext NOT NULL,
 		judg_time time NOT NULL,
+        code_scheme float unsigned NOT NULL,
         code1 smallint(1) UNSIGNED NOT NULL,
         code2 smallint(1) UNSIGNED NOT NULL,
         code3 smallint(1) UNSIGNED NOT NULL,
@@ -126,6 +127,9 @@ function arc_pull_data_cpts($comp_num, $task_num) {
     $competencies = get_posts($c_args);
     foreach ($competencies as $competency) {
         $j = get_field('comp_part',$competency->ID);
+        if($j==0) {
+            $code_scheme = get_field('code_scheme',$competency->ID);
+        }
         $c_defs[$j] = trim($competency->post_content, '""');
         $c_titles[$j] = $competency->post_title;
     }
@@ -143,7 +147,6 @@ function arc_pull_data_cpts($comp_num, $task_num) {
         $code_labels[$j] = wp_strip_all_tags($code->post_content);
     }
     $num_codes = count($codes);
-    // ddd($code_labels);
 
 
     $data_for_js = array(
@@ -157,7 +160,8 @@ function arc_pull_data_cpts($comp_num, $task_num) {
         'responses' => $resp_contents,
         'subNums' => $sub_nums,
         'codeLabels' => $code_labels,
-        'numCodes' => $num_codes
+        'numCodes' => $num_codes,
+        'codeScheme' => $code_scheme
     );
 
     return $data_for_js;
@@ -171,7 +175,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
     global $wpdb;
 
     $db = new arc_judg_db;
-
+    // echo 'new echo statement';
     // get all the data for the given comp and task nums
     $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
     $all_data = $db->get_all_arraya($where);
@@ -215,7 +219,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
                 } else if(intval($sub[$judge1][$code_num])===1) {
                     $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
                 } else {
-                    $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
+                    $review_set[$sub_num][$i] = $sub[$judge2][$excerpt_num];
                 }
             }
         } else {
@@ -242,6 +246,9 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
     $competencies = get_posts($c_args);
     foreach ($competencies as $competency) {
         $j = get_field('comp_part',$competency->ID);
+        if($j==0) {
+            $code_scheme = get_field('code_scheme',$competency->ID);
+        }
         $c_defs[$j] = trim($competency->post_content, '""');
         $c_titles[$j] = $competency->post_title;
     }
@@ -274,7 +281,8 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
         'matches' => $matches,
         'codeLabels' => $code_labels,
         'numCodes' => $num_codes,
-        'judges' => [$judge1,$judge2]
+        'judges' => [$judge1,$judge2],
+        'codeScheme' => $code_scheme
     );
     return $data_for_js;
 }
