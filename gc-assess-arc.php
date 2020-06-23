@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) or die( 'No direct access!' );
 
 include_once 'assets/lib/cpt-setup.php';
 include_once 'assets/lib/judgments-db.php';
+include_once 'assets/lib/post-list-additions.php';
 
 // Call gcaa_create_table on plugin activation.
 register_activation_hook(__FILE__,'gcpc_create_table'); // this function call has to happen here

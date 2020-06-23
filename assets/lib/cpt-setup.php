@@ -23,7 +23,7 @@ function arc_register_cpt_response() {
         'public' => true,
         'taxonomies' => array('category'),
         'show_in_rest' => true,
-        'supports' => array('editor')
+        'supports' => array('editor', 'title')
     );
     register_post_type('response',$args);
 }
@@ -50,7 +50,7 @@ function arc_register_cpt_competency() {
             'public' => true,
             'taxonomies' => array('category'),
             'show_in_rest' => true,
-            'supports' => array('editor')
+            'supports' => array('editor', 'title')
         );
     
         register_post_type('competency',$args);
@@ -79,7 +79,7 @@ function arc_register_cpt_scenario() {
             'public' => true,
             'taxonomies' => array('category'),
             'show_in_rest' => true,
-            'supports' => array('editor')
+            'supports' => array('editor', 'title')
         );
     
         register_post_type('scenario',$args);
