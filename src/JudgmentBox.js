@@ -53,8 +53,8 @@ class JudgmentBox extends Component {
         const code = e.target.id
         this.setState((prevState) => ({
             rows: prevState.rows.filter((row) => row.code[0] != code),
-            excerpts: prevState.excerpts.filter((excerpt,i) => i != code),
-            codes: prevState.codes.filter((num,i) => i != code)
+            excerpts: prevState.excerpts.map((excerpt,i) => i == code ? '' : excerpt),
+            codes: prevState.codes.map((num,i) => i == code ? 0 : num)
         }))
     }
 
