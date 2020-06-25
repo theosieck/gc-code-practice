@@ -1,127 +1,106 @@
 <?php
 
-class GCPCExport {
-    public static function gcpc_do_export() {
-        check_ajax_referer( 'arc_download' );
-        $filepath = 'C:\Users\JorieSieck\Local Sites\newscratch\app\public\wp-content\plugins\gc-prac-code\assets\lib\testtext.txt';
-        header("Content-Description: File Transfer");
-        header("Content-Disposition: attachment; filename=\"$filepath\"");
-        header("Content-Type: text/plain; charset=UTF-8");
-        $buffer_length = ob_get_length(); //length or false if no buffer
-		if ( $buffer_length > 1 ) {
-			ob_clean();
-        }
-        readfile($filepath);
-        exit;
-        // // start buffer
-        // ob_start();
+$db = new arc_judg_db;
 
-        // // set headers, depending on type of export
-        // $filepath = 'C:\Users\JorieSieck\Local Sites\newscratch\app\public\wp-content\plugins\gc-prac-code\assets\lib\testtext.txt';
-        // if(file_exists($filepath)) {
-        //     if(!headers_sent()) {
-        //         header("Content-Description: File Transfer");
-        //         header("Content-Disposition: attachment; filename=\"$filepath\"");
-        //         header("Content-Type: text/plain; charset=UTF-8");
-        //         header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        //         header("Cache-Control: post-check=0, pre-check=0", false);
-        //         header("Pragma: no-cache");
-        
-        //         // flush output - ob_end_clean() is the same as ob_flush() + flush()
-        //         ob_end_clean();
-        
-        //         // get the data
-        //         readfile($filepath);
+// set headers
+$headers = array();
+// $headers[] = "Content-Description: File Transfer";
+$headers[] = "Content-Disposition: attachment; filename=\"competency_csv_data.csv\"";
+$headers[] = "Content-Type: text/csv";
+$headers[] = "Cache-Control: max-age=0, no-cache, no-store";
+$headers[] = "Pragma: no-cache";
+$headers[] = "Connection: close";
 
-        //         ob_end_clean();
-        
-        //         // return headers_list();
-        //         exit;
-        //     } else {
-        //         return headers_list();
-        //     }
-        // } else {
-        //     return "$filepath does not exist, for some reason";
-        // }
-		
-        // die;
+// set default csv headers
+$columns = $db->get_columns();
+$csv_headers = "";
+foreach($columns as $column) {
+    $csv_headers .= $column->Key == "PRI" ? $column->Field : ("," . $column->Field);
+}
+$csv_headers .= "\n";
+
+// get data from db
+if(isset($_REQUEST['comp_num'])) {
+    $comp_num = sanitize_text_field($_REQUEST['comp_num']);
+    $all_rows = $db->get_all_arraya("comp_num = ${comp_num}");
+} else {
+    $all_rows = $db->get_all();
+}
+$csv_rows = "";
+foreach($all_rows as $row) {
+    foreach($row as $key => $cell) {
+        // differentiate between true null and the empty string, convert from UTF-8 encoding to ANSI
+        $cell_data = $cell === null ? "null" : ('"' . iconv("UTF-8", "WINDOWS-1252", $cell) . '"');
+        $csv_rows .= $key == "judg_id" ? $cell_data : ("," . $cell_data);
+    }
+    $csv_rows .= "\n";
+}
+
+// $comp_num = $_POST['comp_num'];
+// if($comp_num != 'all') {
+//   $all_rows = $db->get_all_arraya("comp_num = ${comp_num}");
+// } else {
+//   $all_rows = $db->get_all();
+// }
+
+// create temp dir/file
+$tmp_dir = sys_get_temp_dir();
+$filename = tempnam( $tmp_dir, 'gcpc_data_');
+
+// open file for appending
+$csv_file = fopen($filename, 'a');
+
+// write csv header, rows to file
+fprintf($csv_file, '%s', $csv_headers);
+fprintf($csv_file, '%s', $csv_rows);
+
+// send data
+gcpc_send_data($csv_file,$filename,$headers);
+
+function gcpc_send_data($csv_file,$filename,$headers) {
+    // close temp file
+    fclose($csv_file);
+
+    if (version_compare(phpversion(), '5.3.0', '>')) {
+        //make sure we get the right file size
+        clearstatcache( true, $filename );
+    } else {
+        // for any PHP version prior to v5.3.0
+        clearstatcache();
     }
 
-    public static function gcpc_export_page() {
-        ?>
-        <script type="text/javascript">
-            ( function( $ ){
+    // set download size
+    $headers[] = "Content-Length: " . filesize($filename);
 
-            $('#download-button').click( function(){
-
-                event.preventDefault();
-                const comp_num = document.querySelector('#arc-select').value;
-                var url = admin_url( 'admin-ajax.php' ) + '?action=gcpc_do_export&_wpnonce=<?php echo wp_create_nonce( 'arc_download' ); ?>';
-				document.location.href = url;
-                // $.ajax({
-                //     type : 'post',
-                //     dataType : 'json',
-                //     url : arc_globals.ajax_url,
-                //     data : {
-                //         action: 'gcpc_do_export',
-                //         comp_num,
-                //         _ajax_nonce: arc_globals.nonce
-                //     },
-                //     error: function(response) {
-                //         console.log(response);
-                //     },
-                //     success: function( response ) {
-                //         console.log(response);
-                //         // if( 'success' == response.type ) {
-                //         //     // alert('yay!');
-                //         //     console.log(response['data']);
-                //         // }
-                //         // else {
-                //         //     alert( 'Something went wrong!' );
-                //         // }
-                //     }
-                // })
-
-            } );
-
-            } )( jQuery );
-        </script>
-        <style>
-            button {
-            background-color: #333;
-            border: 0;
-            cursor: pointer;
-            padding: 16px 24px;
-            white-space: normal;
-            width: auto;
-            text-decoration: none;
-            color: #fff;
-            font-size: 16px;
-            font-weight: 700;
-            }
-        </style>
-        <body>
-            <div class="wrap">
-                <h2><?php esc_html_e( 'ARC Assessment Data Export', 'arc-jquery-ajax' ); ?></h2>
-            <h3>Select which competency you would like to export:</h3>
-            <select name="arc-select" id="arc-select">
-            <option value="all">All</option>
-            <option value="1">Competency 1</option>
-            <option value="2">Competency 2</option>
-            <option value="3">Competency 3</option>
-            <option value="4">Competency 4</option>
-            <option value="5">Competency 5</option>
-            <option value="6">Competency 6</option>
-            <option value="7">Competency 7</option>
-            <option value="8">Competency 8</option>
-            <option value="9">Competency 9</option>
-            <option value="10">Competency 10</option>
-            <option value="11">Competency 11</option>
-            <option value="12">Competency 12</option>
-            </select>
-            <button id="download-button" class="arc-download">Download</button>
-            </div>
-        </body>
-        <?php
+    // make sure headers have not been sent already
+    if(headers_sent()) {
+        $response['type'] = 'error: headers already sent';
+        $response = json_encode($response);
+        die;
     }
+
+    // send headers
+    foreach($headers as $header) {
+        header($header . "\r\n");
+    }
+
+    // disable compression for the duration of file download
+    if(ini_get('zlib.output_compression')){
+        ini_set('zlib.output_compression', 'Off');
+    }
+
+    // read the file to output - if using on flywheel site, use readfile instead
+    if(function_exists('fpassthru')) {
+        $fp = fopen($filename, 'rb');
+        fpassthru($fp);
+        fclose($fp);
+    } else {
+        readfile($filename);
+    }
+
+    // remove temp file
+    unlink($filename);
+
+    // exit
+    exit;
 }

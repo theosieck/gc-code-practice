@@ -14,6 +14,7 @@
                 _ajax_nonce: arc_globals.nonce
             },
             error: function(response) {
+                console.log('error: ');
                 console.log(response);
             },
             success: function( response ) {
