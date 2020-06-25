@@ -60,8 +60,7 @@ class ReviewBox extends Component {
                     matches={this.props.matches}
                     handleButton={this.handleMatches}
                     state={this.state}
-                />
-                }
+                />}
             </div>
                 <button onClick={this.handleNext}>Next</button>
             </div>

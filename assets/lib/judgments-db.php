@@ -50,6 +50,7 @@ function gcpc_create_table() {
         excerpt7 longtext,
         excerpt8 longtext,
         excerpt9 longtext,
+        judg_comments longtext,
         rater1 mediumint(9) UNSIGNED,
         rater2 mediumint(9) UNSIGNED,
         PRIMARY KEY (judg_id)
@@ -204,6 +205,8 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
             $resp_ids[] = $resp_id;
             $sub_nums[] = $sub_num;
             $resp_contents[$resp_id] = trim($response->post_content, '""');
+            
+            // add comments
 
             // sort codes for this subject into matches and reviews
             for($i=1;$i<10;$i++) {
