@@ -14,6 +14,8 @@ defined( 'ABSPATH' ) or die( 'No direct access!' );
 include_once 'assets/lib/cpt-setup.php';
 include_once 'assets/lib/judgments-db.php';
 include_once 'assets/lib/post-list-additions.php';
+require_once( 'assets/lib/plugin-page.php' );
+
 
 // Call gcaa_create_table on plugin activation.
 register_activation_hook(__FILE__,'gcpc_create_table'); // this function call has to happen here
@@ -286,9 +288,5 @@ function arc_save_data() {
     echo $response;
     die();
 }
-
-
-require_once( 'assets/lib/plugin-page.php' );
-
 
 ?>

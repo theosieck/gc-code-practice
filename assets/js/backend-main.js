@@ -1,23 +1,30 @@
 ( function( $ ){
 
-    $('.jsforwp-reset-likes').click( function(){
+    $('#download-button').click( function(){
 
         event.preventDefault();
+        const comp_num = document.querySelector('#arc-select').value;
         $.ajax({
             type : 'post',
             dataType : 'json',
-            url : jsforwp_globals.ajax_url,
+            url : arc_globals.ajax_url,
             data : {
-                action: 'jsforwp_reset_likes',
-                _ajax_nonce: jsforwp_globals.nonce
+                action: 'gcpc_do_export',
+                comp_num,
+                _ajax_nonce: arc_globals.nonce
+            },
+            error: function(response) {
+                console.log(response);
             },
             success: function( response ) {
-                if( 'success' == response.type ) {
-                    $(".jsforwp-total-likes").html( 0 );
-                }
-                else {
-                    alert( 'Something went wrong!' );
-                }
+                console.log(response);
+                // if( 'success' == response.type ) {
+                //     // alert('yay!');
+                //     console.log(response['data']);
+                // }
+                // else {
+                //     alert( 'Something went wrong!' );
+                // }
             }
         })
 

@@ -375,23 +375,20 @@ class arc_judg_db {
         return $wpdb->get_results( $sql, 'ARRAY_A' );
     }
 
+    static function get_all() {
+        global $wpdb;
+        $sql   = "SELECT * FROM " . self::_table();
+        return $wpdb->get_results( $sql, 'ARRAY_A' );
+    }
+
 
     /*
      * Returns an array of the columns and their formats
      */
     public function get_columns() {
-        return array(
-            'judg_id' => '%d', 	
-            'user_id' => '%d',	
-            'sub_num' => '%d',	
-            'comp_num' => '%d', 	
-            'task_num' => '%d', 	
-            'resp_title' => '%s',
-            'judg_type' => '%s',
-            'judg_level' => '%d', 	
-            'judg_time' => '%s', 	
-            'rationale' => '%s'
-        );
+        global $wpdb;
+        $sql = "SHOW columns FROM " . self::_table();
+        return $wpdb->get_results($sql);
     }
 
     /*
