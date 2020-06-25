@@ -174,6 +174,8 @@ class JudgmentApp extends Component {
                         handleNext={this.handleNext}
                         reviewSet={respObj.reviewSet[respObj.subNums[this.state.trial-1]]}
                         matches={respObj.matches[respObj.subNums[this.state.trial-1]]}
+                        judge1Comments={respObj.judge1Comments[this.state.respId]}
+                        judge2Comments={respObj.judge2Comments[this.state.respId]}
                     />
                 }
             </div>

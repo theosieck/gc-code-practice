@@ -1,5 +1,4 @@
 const { Component } = wp.element;
-import ReactHtmlParser from 'react-html-parser';
 
 class CommentBox extends Component {
     state = {

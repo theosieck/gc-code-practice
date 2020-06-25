@@ -49,6 +49,18 @@ class ReviewBox extends Component {
                 {ReactHtmlParser(this.props.response)}
             </div>
             <div style={this.divStyle}>
+                {this.props.judge1Comments && 
+                    <div>
+                    <h2>Judge 1's Comments:</h2>
+                    <p>{ReactHtmlParser(this.props.judge1Comments)}</p>
+                    </div>
+                }
+                {this.props.judge2Comments && 
+                    <div>
+                    <h2>Judge 2's Comments:</h2>
+                    <p>{ReactHtmlParser(this.props.judge2Comments)}</p>
+                    </div>
+                }
                 <ReviewComp 
                     codes={this.props.codes}
                     excerpts={this.props.reviewSet}

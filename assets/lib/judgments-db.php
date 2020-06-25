@@ -205,8 +205,18 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
             $resp_ids[] = $resp_id;
             $sub_nums[] = $sub_num;
             $resp_contents[$resp_id] = trim($response->post_content, '""');
+            $judge1_comments[$resp_id] = '';
+            $judge2_comments[$resp_id] = '';
             
-            // add comments
+            // check for comments
+            $j1_comment = $sub[$judge1]['judg_comments'];
+            if($j1_comment) {
+                $judge1_comments[$resp_id] = $j1_comment;
+            }
+            $j2_comment = $sub[$judge2]['judg_comments'];
+            if($j2_comment) {
+                $judge2_comments[$resp_id] = $j2_comment;
+            }
 
             // sort codes for this subject into matches and reviews
             for($i=1;$i<10;$i++) {
@@ -285,7 +295,9 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
         'codeLabels' => $code_labels,
         'numCodes' => $num_codes,
         'judges' => [$judge1,$judge2],
-        'codeScheme' => $code_scheme
+        'codeScheme' => $code_scheme,
+        'judge1Comments' => $judge1_comments,
+        'judge2Comments' => $judge2_comments
     );
     return $data_for_js;
 }
