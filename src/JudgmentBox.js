@@ -63,7 +63,10 @@ class JudgmentBox extends Component {
 
     handleCommentButton = (e) => {
         e.preventDefault()
-        this.setState((prevState) => ({doComment:!prevState.doComment}))
+        this.setState((prevState) => ({
+            doComment:!prevState.doComment,
+            comment:""
+        }))
     }
 
     handleComment = (comment) => {
@@ -104,18 +107,23 @@ class JudgmentBox extends Component {
                     </Grid>
                 </Grid>
                 </div>
-                <div style={this.divStyle}>
+                <div style={{marginTop:"25px"}}>
+                {!this.state.doComment &&
+                    <button onClick={this.handleCommentButton}>Add A Comment</button>
+                }
+                {this.state.doComment &&
+                    <CommentBox
+                        handleComment={this.handleComment}
+                        handleCommentButton={this.handleCommentButton}
+                    />
+                }
+                </div>
+                <div style={{marginTop:"25px"}}>
                 <Rows 
                     rows={this.state.rows}
                     handleDelete={this.handleDelete}
                     showDelete={true}
                 />
-                {!this.state.doComment &&
-                    <button onClick={this.handleCommentButton}>Add A Comment</button>
-                }
-                {this.state.doComment &&
-                    <CommentBox handleComment={this.handleComment} />
-                }
                 </div>
                 <button style={{marginTop:"10px"}} onClick={this.handleNext}>Next</button>
             </div>

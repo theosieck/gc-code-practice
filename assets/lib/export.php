@@ -1,6 +1,6 @@
 <?php
 
-$db = new arc_judg_db;
+$db = new ARCJudgDB;
 
 // set headers
 $headers = array();
@@ -45,7 +45,7 @@ foreach($all_rows as $row) {
 
 // create temp dir/file
 $tmp_dir = sys_get_temp_dir();
-$filename = tempnam( $tmp_dir, 'gcpc_data_');
+$filename = tempnam( $tmp_dir, 'gcac_data_');
 
 // open file for appending
 $csv_file = fopen($filename, 'a');
@@ -55,9 +55,9 @@ fprintf($csv_file, '%s', $csv_headers);
 fprintf($csv_file, '%s', $csv_rows);
 
 // send data
-gcpc_send_data($csv_file,$filename,$headers);
+gcac_send_data($csv_file,$filename,$headers);
 
-function gcpc_send_data($csv_file,$filename,$headers) {
+function gcac_send_data($csv_file,$filename,$headers) {
     // close temp file
     fclose($csv_file);
 

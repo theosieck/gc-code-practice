@@ -4,7 +4,7 @@
    Version: 1.0.0
    Author: Global Cognition
    Author URI: https://www.globalcognition.org
-   Description: Serve up responses for assessment
+   Description: Serve up responses for feature coding
    Text Domain: gc-assess-arc
    License: GPLv3
 */
@@ -18,7 +18,7 @@ require_once( 'assets/lib/plugin-page.php' );
 
 
 // Call gcaa_create_table on plugin activation.
-register_activation_hook(__FILE__,'gcpc_create_table'); // this function call has to happen here
+register_activation_hook(__FILE__,'gcac_create_table'); // this function call has to happen here
 
 function gc_assess_arc_enqueue_scripts() {
 
@@ -87,11 +87,11 @@ add_action( 'wp_enqueue_scripts', 'gc_assess_arc_enqueue_styles' );
 /**
  * Display current judgment progress
  */
-function gcpc_display_progress() {
+function gcac_display_progress() {
   if(is_page('exemplar-assessment-progress')) {
     global $wpdb;
     $posts_table = $wpdb->prefix . 'posts';
-    $db = new arc_judg_db;
+    $db = new ARCJudgDB;
     $judgments_table = $db->get_name();
 
     // get array of competencies
@@ -156,7 +156,7 @@ function gcpc_display_progress() {
     }
   }
 }
-add_action('genesis_entry_content','gcpc_display_progress');
+add_action('genesis_entry_content','gcac_display_progress');
 
 // Add judge1 to url
 function arc_judge1_query_vars( $qvars ) {
@@ -210,16 +210,16 @@ add_filter( 'query_vars', 'arc_review_query_vars' );
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
 /*
- * Calls the insert function from the class arc_judg_db to insert response data into the table
+ * Calls the insert function from the class ARCJudgDB to insert response data into the table
  */
 function arc_save_data() {
     check_ajax_referer('gcaa_scores_nonce');
     global $current_user;
     // global $arc_table_postfix;
-    // global $prac_table_postfix;
+    // global $code_table_postfix;
 
-    // $postfix = $_POST['type'] == 'exemplar' ? $prac_table_postfix : $arc_table_postfix;
-    $db = new arc_judg_db;
+    // $postfix = $_POST['type'] == 'exemplar' ? $code_table_postfix : $arc_table_postfix;
+    $db = new ARCJudgDB;
 
     // Get data from React components
     $sub_num = $_POST['sub_num'];

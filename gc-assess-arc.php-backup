@@ -97,12 +97,12 @@ add_filter( 'query_vars', 'arc_review_query_vars' );
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
 /*
- * Calls the insert function from the class arc_judg_db to insert response data into the table
+ * Calls the insert function from the class ARCJudgDB to insert response data into the table
  */
 function arc_save_data() {
     check_ajax_referer('gcaa_scores_nonce');
     global $current_user;
-    $db = new arc_judg_db;
+    $db = new ARCJudgDB;
     // Get data from React components
     $sub_num = $_POST['sub_num'];
     $comp_num = $_POST['comp_num'];
