@@ -17,8 +17,12 @@ const genMatches = (codes,matches) => {
 }
 
 const Matches = (props) => {
-    let matches = genMatches(props.codes,props.matches,props.setMatches);
-    const numMatches = matches[0]
+    let matches = []
+    let numMatches = 0
+    if(props.matches) {
+        matches = genMatches(props.codes,props.matches,props.setMatches);
+        numMatches = matches[0]
+    }
     let displayed = 0;
     return (
         <div style={{marginTop: '50px'}}>

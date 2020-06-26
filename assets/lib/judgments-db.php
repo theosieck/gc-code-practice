@@ -227,11 +227,11 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
                 }
                 $excerpt_num = 'excerpt' . $i;
 
-                if(intval($sub[$judge1][$code_num])===intval($sub[$judge2][$code_num])) {
+                if((intval($sub[$judge1][$code_num])===intval($sub[$judge2][$code_num])) && (intval($sub[$judge1][$code_num])===1)) {
                     $matches[$sub_num][$i] = [$sub[$judge1][$excerpt_num], $sub[$judge2][$excerpt_num]];
                 } else if(intval($sub[$judge1][$code_num])===1) {
                     $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
-                } else {
+                } else if(intval($sub[$judge2][$code_num])===1) {
                     $review_set[$sub_num][$i] = $sub[$judge2][$excerpt_num];
                 }
             }

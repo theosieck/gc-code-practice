@@ -13,7 +13,10 @@ const genCodes = (codes,excerpts) => {
 }
 
 const ReviewComp = (props) => {
-    let codes = genCodes(props.codes,props.excerpts)
+    let codes = []
+    if(props.excerpts) {
+        codes = genCodes(props.codes,props.excerpts)
+    }
     return (
         <div>
         <h2>Singles</h2>
