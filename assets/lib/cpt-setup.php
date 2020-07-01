@@ -1,31 +1,31 @@
 <?php
 /*
- * Sets up the Response, Competency, and Scenario CPTs.
+ * Sets up the Exemplar, Competency, and Scenario CPTs.
  */
 namespace GC\ARC\Custom;
-add_action('init',__NAMESPACE__ . '\arc_register_cpt_response');
+add_action('init',__NAMESPACE__ . '\arc_register_cpt_exemplar');
 /*
- * Adds the "Response" custom post type
+ * Adds the "Exemplar" custom post type
  */
-function arc_register_cpt_response() {
+function arc_register_cpt_exemplar() {
     $labels = array(
-        'name' => _x('Responses','responses'),
-        'singular_name' => _x('Response','response'),
-        'all_items' => ('All Responses'),
-        'add_new_item' => ('Add New Response'),
-        'edit_item' => ('Edit Response'),
-        'search_items' => ('Search Responses'),
-        'view_item' => ('View Response'),
+        'name' => _x('Exemplars','exemplars'),
+        'singular_name' => _x('Exemplar','exemplar'),
+        'all_items' => ('All Exemplars'),
+        'add_new_item' => ('Add New Exemplar'),
+        'edit_item' => ('Edit Exemplar'),
+        'search_items' => ('Search Exemplars'),
+        'view_item' => ('View Exemplar'),
     );
     $args = array(
-        'label' => __('Responses', 'responses'),
+        'label' => __('Exemplars', 'exemplars'),
         'labels' => $labels,
         'public' => true,
         'taxonomies' => array('category'),
         'show_in_rest' => true,
         'supports' => array('editor', 'title')
     );
-    register_post_type('response',$args);
+    register_post_type('exemplar',$args);
 }
 
 add_action('init',__NAMESPACE__ . '\arc_register_cpt_competency');
@@ -43,7 +43,7 @@ function arc_register_cpt_competency() {
             'search_items' => ('Search Competencies'),
             'view_item' => ('View Competency'),
         );
-    
+
         $args = array(
             'label' => __('Competencies', 'competencies'),
             'labels' => $labels,
@@ -52,7 +52,7 @@ function arc_register_cpt_competency() {
             'show_in_rest' => true,
             'supports' => array('editor', 'title')
         );
-    
+
         register_post_type('competency',$args);
     }
 }
@@ -72,7 +72,7 @@ function arc_register_cpt_scenario() {
             'search_items' => ('Search Scenarios'),
             'view_item' => ('View Scenario'),
         );
-    
+
         $args = array(
             'label' => __('Scenarios', 'scenarios'),
             'labels' => $labels,
@@ -81,7 +81,7 @@ function arc_register_cpt_scenario() {
             'show_in_rest' => true,
             'supports' => array('editor', 'title')
         );
-    
+
         register_post_type('scenario',$args);
     }
 }
