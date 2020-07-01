@@ -39,7 +39,7 @@ class JudgmentApp extends Component {
      * Parameters: none
      * Fires: when the user clicks the 'Next' button
      */
-    handleNext = (excerpts,codes) => {
+    handleNext = (excerpts,codes,comment) => {
         // Check whether the user has finished all the trials
         if (this.state.trial < nTrials) {
             this.setState((prevState) => ({
@@ -71,7 +71,8 @@ class JudgmentApp extends Component {
             judg_time: judgTime,
             codes: codesArray,
             judges: respObj.judges,
-            code_scheme: respObj.codeScheme
+            code_scheme: respObj.codeScheme,
+            comment
         };
         // console.log(dataObj)
 
@@ -173,6 +174,8 @@ class JudgmentApp extends Component {
                         handleNext={this.handleNext}
                         reviewSet={respObj.reviewSet[respObj.subNums[this.state.trial-1]]}
                         matches={respObj.matches[respObj.subNums[this.state.trial-1]]}
+                        judge1Comments={respObj.judge1Comments[this.state.respId]}
+                        judge2Comments={respObj.judge2Comments[this.state.respId]}
                     />
                 }
             </div>

@@ -5,20 +5,20 @@
 global $db_version;
 $db_version = '1.0';
 
-global $prac_table_postfix;
-$prac_table_postfix = 'gc_prac_codes';
+global $code_table_postfix;
+$code_table_postfix = 'gc_apply_codes';
 
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
- * Creates the table "wp_gc_prac_codes" in the database.
+ * Creates the table "wp_gc_apply_codes" in the database.
  */
-function gcpc_create_table() {
+function gcac_create_table() {
     global $wpdb;
     global $db_version;
-    global $prac_table_postfix;
+    global $code_table_postfix;
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-    $arc_table_name = $wpdb->prefix . $prac_table_postfix;
+    $arc_table_name = $wpdb->prefix . $code_table_postfix;
 
     $charset_collate = $wpdb->get_charset_collate();
 
@@ -50,6 +50,7 @@ function gcpc_create_table() {
         excerpt7 longtext,
         excerpt8 longtext,
         excerpt9 longtext,
+        judg_comments longtext,
         rater1 mediumint(9) UNSIGNED,
         rater2 mediumint(9) UNSIGNED,
         PRIMARY KEY (judg_id)
@@ -68,7 +69,7 @@ function arc_pull_data_cpts($comp_num, $task_num) {
     global $current_user;
     global $wpdb;
 
-    $db = new arc_judg_db;
+    $db = new ARCJudgDB;
 
     $resp_args = array(
         'numberposts' => -1,
@@ -174,7 +175,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
     global $current_user;
     global $wpdb;
 
-    $db = new arc_judg_db;
+    $db = new ARCJudgDB;
     // echo 'new echo statement';
     // get all the data for the given comp and task nums
     $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
@@ -204,6 +205,18 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
             $resp_ids[] = $resp_id;
             $sub_nums[] = $sub_num;
             $resp_contents[$resp_id] = trim($response->post_content, '""');
+            $judge1_comments[$resp_id] = '';
+            $judge2_comments[$resp_id] = '';
+            
+            // check for comments
+            $j1_comment = $sub[$judge1]['judg_comments'];
+            if($j1_comment) {
+                $judge1_comments[$resp_id] = $j1_comment;
+            }
+            $j2_comment = $sub[$judge2]['judg_comments'];
+            if($j2_comment) {
+                $judge2_comments[$resp_id] = $j2_comment;
+            }
 
             // sort codes for this subject into matches and reviews
             for($i=1;$i<10;$i++) {
@@ -214,11 +227,11 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
                 }
                 $excerpt_num = 'excerpt' . $i;
 
-                if(intval($sub[$judge1][$code_num])===intval($sub[$judge2][$code_num])) {
+                if((intval($sub[$judge1][$code_num])===intval($sub[$judge2][$code_num])) && (intval($sub[$judge1][$code_num])===1)) {
                     $matches[$sub_num][$i] = [$sub[$judge1][$excerpt_num], $sub[$judge2][$excerpt_num]];
                 } else if(intval($sub[$judge1][$code_num])===1) {
                     $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
-                } else {
+                } else if(intval($sub[$judge2][$code_num])===1) {
                     $review_set[$sub_num][$i] = $sub[$judge2][$excerpt_num];
                 }
             }
@@ -282,7 +295,9 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
         'codeLabels' => $code_labels,
         'numCodes' => $num_codes,
         'judges' => [$judge1,$judge2],
-        'codeScheme' => $code_scheme
+        'codeScheme' => $code_scheme,
+        'judge1Comments' => $judge1_comments,
+        'judge2Comments' => $judge2_comments
     );
     return $data_for_js;
 }
@@ -290,7 +305,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
 /*
  * The class which defines the generic functions for working with the database
  */
-class arc_judg_db {
+class ARCJudgDB {
     static $primary_key = 'id';
 
     // Private methods
@@ -299,8 +314,8 @@ class arc_judg_db {
      */
     private static function _table() {
         global $wpdb;
-        global $prac_table_postfix;
-        return $wpdb->prefix . $prac_table_postfix;
+        global $code_table_postfix;
+        return $wpdb->prefix . $code_table_postfix;
     }
 
     /*
@@ -375,23 +390,20 @@ class arc_judg_db {
         return $wpdb->get_results( $sql, 'ARRAY_A' );
     }
 
+    static function get_all() {
+        global $wpdb;
+        $sql   = "SELECT * FROM " . self::_table();
+        return $wpdb->get_results( $sql, 'ARRAY_A' );
+    }
+
 
     /*
      * Returns an array of the columns and their formats
      */
     public function get_columns() {
-        return array(
-            'judg_id' => '%d', 	
-            'user_id' => '%d',	
-            'sub_num' => '%d',	
-            'comp_num' => '%d', 	
-            'task_num' => '%d', 	
-            'resp_title' => '%s',
-            'judg_type' => '%s',
-            'judg_level' => '%d', 	
-            'judg_time' => '%s', 	
-            'rationale' => '%s'
-        );
+        global $wpdb;
+        $sql = "SHOW columns FROM " . self::_table();
+        return $wpdb->get_results($sql);
     }
 
     /*

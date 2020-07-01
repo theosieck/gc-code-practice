@@ -48,7 +48,7 @@ function gcaa_create_table() {
 function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
     global $current_user;
     global $wpdb;
-    $db = new arc_judg_db;
+    $db = new ARCJudgDB;
     $resp_args = array(
         'numberposts' => -1,
         'post_type' => 'response',
@@ -149,7 +149,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $block_num) {
 function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num) {
     global $current_user;
     global $wpdb;
-    $db = new arc_judg_db;
+    $db = new ARCJudgDB;
     // get all the data for the given comp and task nums
     $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
     $all_data = $db->get_all($where);
@@ -272,7 +272,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $bloc
 /*
  * The class which defines the generic functions for working with the database
  */
-class arc_judg_db {
+class ARCJudgDB {
     static $primary_key = 'id';
 
     // Private methods

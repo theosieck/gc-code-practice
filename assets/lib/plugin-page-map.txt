@@ -1,0 +1,18 @@
+okay, here's where i am right now: i figured out how to get an array of all the rows of the db table by digging through the judgment-db code. i also found a function which takes an array of arrays and writes it to a csv file. i ran into a problem where the array i have is actually an array of _objects_, so i have to figure out if i can convert the objects to arrays or something.
+after i get that straightened out, i'll just need to figure out how to make it a) create a new file instead of writing to an existing one b) make it downloadable.
+shouldn't be too bad, but we'll see tomorrow 👩‍💻
+js
+jsieckJan 14
+oh, if you go to the page right now i'm just ddd-ing the array i got from the db, so that's what that is
+js
+jsieckJan 15
+ok, i've almost got it! the only outstanding issue before i hook up the button is that the column names are each writing as a new line instead of one line with all of them, which i think will be a pretty easy fix.
+also, i just commented out the function call in the plugin because it was causing the download thing to come up for every menu button, so you should be able to look at the other stuff now
+js
+jsieckJan 15
+final notes for this are inside the plugin code - got the columns working but not the button 😞
+WinstonJan 15
+Did you want to keep working on it - is the last piece going to be pretty easy?
+js
+jsieckJan 15
+im not really sure - i spent like 1/2 an hour on the button part and couldnt figure it out - i think it's an issue with how the ajax call executes. i left it alone after that so i could focus on the new db setup, except now somehow the whole plugin is broken so im trying to figure out whats up

@@ -4,20 +4,23 @@ import Grid from '@material-ui/core/Grid';
 import PresentResp from './PresentResp';
 import Codes from './Codes';
 import Rows from './Rows';
+import CommentBox from './CommentBox';
 
 class JudgmentBox extends Component {
     state = {
         rows:[],
         activeSelect:'',
         codes:[0,0,0,0,0,0,0,0,0,0],
-        excerpts:['','','','','','','','','','']
+        excerpts:['','','','','','','','','',''],
+        doComment:false,
+        comment:""
     }
 
     divStyle = {
         marginTop: '50px'
     };
 
-    handleButton = (code) => {
+    handleCodeButton = (code) => {
         if(code) {
             const codeKey = code[0]
             const selection = this.state.activeSelect ? this.state.activeSelect : 'No selection'
@@ -58,15 +61,29 @@ class JudgmentBox extends Component {
         }))
     }
 
+    handleCommentButton = (e) => {
+        e.preventDefault()
+        this.setState((prevState) => ({
+            doComment:!prevState.doComment,
+            comment:""
+        }))
+    }
+
+    handleComment = (comment) => {
+        this.setState(() => ({comment}))
+    }
+
     handleNext = (e) => {
         e.preventDefault();
         this.setState(() => ({
             rows:[],
             activeSelect:'',
             codes:[0,0,0,0,0,0,0,0,0],
-            excerpts:['','','','','','','','','']
+            excerpts:['','','','','','','','',''],
+            doComment:false,
+            comment:""
         }))
-        this.props.handleNext(this.state.excerpts,this.state.codes);
+        this.props.handleNext(this.state.excerpts,this.state.codes,this.state.comment);
     }
 
     render() {
@@ -84,20 +101,31 @@ class JudgmentBox extends Component {
                     <Grid item xs={4}>
                     <Codes
                         codes={this.props.codes}
-                        handleButton={this.handleButton}
+                        handleButton={this.handleCodeButton}
                         state={this.state}
                     />
                     </Grid>
                 </Grid>
                 </div>
-                <div style={this.divStyle}>
+                <div style={{marginTop:"25px"}}>
+                {!this.state.doComment &&
+                    <button onClick={this.handleCommentButton}>Add A Comment</button>
+                }
+                {this.state.doComment &&
+                    <CommentBox
+                        handleComment={this.handleComment}
+                        handleCommentButton={this.handleCommentButton}
+                    />
+                }
+                </div>
+                <div style={{marginTop:"25px"}}>
                 <Rows 
                     rows={this.state.rows}
                     handleDelete={this.handleDelete}
                     showDelete={true}
                 />
                 </div>
-                <button onClick={this.handleNext}>Next</button>
+                <button style={{marginTop:"10px"}} onClick={this.handleNext}>Next</button>
             </div>
         );
     }
