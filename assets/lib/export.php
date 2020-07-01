@@ -20,12 +20,7 @@ foreach($columns as $column) {
 $csv_headers .= "\n";
 
 // get data from db
-if(isset($_REQUEST['comp_num'])) {
-    $comp_num = sanitize_text_field($_REQUEST['comp_num']);
-    $all_rows = $db->get_all_arraya("comp_num = ${comp_num}");
-} else {
-    $all_rows = $db->get_all();
-}
+$all_rows = $db->get_all();
 $csv_rows = "";
 foreach($all_rows as $row) {
     foreach($row as $key => $cell) {
@@ -35,13 +30,6 @@ foreach($all_rows as $row) {
     }
     $csv_rows .= "\n";
 }
-
-// $comp_num = $_POST['comp_num'];
-// if($comp_num != 'all') {
-//   $all_rows = $db->get_all_arraya("comp_num = ${comp_num}");
-// } else {
-//   $all_rows = $db->get_all();
-// }
 
 // create temp dir/file
 $tmp_dir = sys_get_temp_dir();
