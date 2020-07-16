@@ -65,31 +65,60 @@ function gcac_create_table() {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num) {
+function arc_pull_data_cpts($comp_num, $task_num, $sub_num) {
     global $current_user;
     global $wpdb;
-
     $db = new ARCJudgDB;
+		$judgments_table = $db->get_name();
 
-    $resp_args = array(
-        'numberposts' => -1,
-        'post_type' => 'exemplar',
-        'meta_query' =>
-            array(
-                'relation' => 'AND',
-                array(
-                    'key' => 'comp_num',
-                    'value' => $comp_num,
-                    'compare' => '=',
-                ),
-                array(
-                    'key' => 'task_num',
-                    'value' => $task_num,
-                    'compare' => '=',
-                ),
-            )
-    );
-    
+		$results_obj = NULL;
+		// check whether we want one post or all of them
+		if($sub_num) {
+			$sql = "SELECT * FROM `{$judgments_table}` WHERE `sub_num` = {$sub_num} AND `comp_num` = {$comp_num} AND `task_num` = {$task_num}";
+			$results = $wpdb->get_results($sql);
+			$results_obj = $results[count($results)-1];
+			$meta_query = array(
+					'relation' => 'AND',
+					array(
+							'key' => 'comp_num',
+							'value' => $comp_num,
+							'compare' => '=',
+					),
+					array(
+						'relation' => 'AND',
+						array(
+								'key' => 'task_num',
+								'value' => $task_num,
+								'compare' => '=',
+						),
+						array(
+							'key' => 'sub_num',
+							'value' => $sub_num,
+							'compare' => '=',
+						),
+					),
+				);
+		} else {
+			$meta_query = array(
+          'relation' => 'AND',
+          array(
+              'key' => 'comp_num',
+              'value' => $comp_num,
+              'compare' => '=',
+          ),
+          array(
+              'key' => 'task_num',
+              'value' => $task_num,
+              'compare' => '=',
+          ),
+        );
+		}
+
+		$resp_args = array(
+			'numberposts' => -1,
+			'post_type' => 'exemplar',
+			'meta_query' => $meta_query
+		);
     $all_responses = get_posts($resp_args);
     $responses = [];
     $total = 0;
@@ -105,7 +134,7 @@ function arc_pull_data_cpts($comp_num, $task_num) {
     foreach ($responses as $response) {
         $resp_id = $response->ID;
         $resp_ids[] = $resp_id;
-        $sub_nums[] = get_field('sub_num', $resp_id);
+        $sub_nums[] = $sub_num ? $sub_num : get_field('sub_num', $resp_id);
         $resp_contents[$resp_id] = trim($response->post_content, '""');
     }
 
@@ -162,7 +191,8 @@ function arc_pull_data_cpts($comp_num, $task_num) {
         'subNums' => $sub_nums,
         'codeLabels' => $code_labels,
         'numCodes' => $num_codes,
-        'codeScheme' => $code_scheme
+        'codeScheme' => $code_scheme,
+				'resultsObj' => $results_obj
     );
 
     return $data_for_js;
@@ -207,7 +237,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
             $resp_contents[$resp_id] = trim($response->post_content, '""');
             $judge1_comments[$resp_id] = '';
             $judge2_comments[$resp_id] = '';
-            
+
             // check for comments
             $j1_comment = $sub[$judge1]['judg_comments'];
             if($j1_comment) {

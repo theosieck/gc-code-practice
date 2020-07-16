@@ -45,11 +45,13 @@ function gc_assess_arc_enqueue_scripts() {
             $judge2 = sanitize_text_field(get_query_var('judge2'));
             $data_for_js = arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num);
           } else {
-            $data_for_js = arc_pull_data_cpts($comp_num, $task_num);
+						$sub_num = sanitize_text_field(get_query_var('sub_num'));
+            $data_for_js = arc_pull_data_cpts($comp_num, $task_num, $sub_num);
           }
           $other_data = array(
               'compNum' => $comp_num,
               'taskNum' => $task_num,
+							'subNum' => $sub_num,
               'review' => $review
             );
           if(is_array($data_for_js)) {
@@ -88,8 +90,11 @@ add_action( 'wp_enqueue_scripts', 'gc_assess_arc_enqueue_styles' );
  * Display current judgment progress
  */
 function gcac_display_progress() {
-  if(is_page('exemplar-assessment-progress')) {
+	$is_indep = is_page('independent-exemplar-assessment-progress');
+  if(is_page('exemplar-assessment-progress') || $is_indep) {
     global $wpdb;
+		global $current_user;	// only needed for indep
+		$base_url = 'https://local.sandbox/?page_id=5100';	// only needed for indep
     $posts_table = $wpdb->prefix . 'posts';
     $db = new ARCJudgDB;
     $judgments_table = $db->get_name();
@@ -130,7 +135,7 @@ function gcac_display_progress() {
 
       // print competency name
       echo "<h3>Competency {$comp_name}</h3>";
-      
+
       // iterate over ct_pairs
       foreach($ct_pairs[$comp_num] as $ct_pair) {
         // print scenario name
@@ -143,20 +148,65 @@ function gcac_display_progress() {
         $total_responses = count($wpdb->get_results($sql));
         // get total number of coded responses
         $sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%'";
+				if($is_indep) {
+					$sql .= " AND `user_id` = {$current_user->ID}";
+				}
         $num_coded_responses = count($wpdb->get_results($sql));
         // get total number of reviewed responses
-        $sql .= " AND `judg_type` = 'rev'";
+        $sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%' AND `judg_type` = 'rev'";
         $num_reviewed_responses = count($wpdb->get_results($sql));
 
+				if($is_indep) {
+					// make url for editing coded exemplars
+					$list_url = $base_url . "&comp_num={$comp_num}&task_num={$task_num}";	// change leading & to ? in production
+				}
+
         // print counts
-        echo "{$total_responses} exemplars to code.<br />" . PHP_EOL;
-        echo "{$num_coded_responses} coded exemplars.<br />" . PHP_EOL;
-        echo "{$num_reviewed_responses} reviewed exemplars.<br /><br />" . PHP_EOL;
+        echo "{$total_responses} exemplars to code.<br />";
+        echo "{$num_coded_responses} coded exemplars." . ($is_indep ? " <a href=$list_url>Click to see list</a><br />" : "<br />");
+        echo "{$num_reviewed_responses} reviewed exemplars.<br /><br />";
       }
     }
   }
 }
 add_action('genesis_entry_content','gcac_display_progress');
+
+/**
+ * display list of coded posts for given task/competency pair
+*/
+function gcac_display_ct_pair_list() {
+	if(is_page('ct-pair-progress')) {
+		global $wpdb;
+		global $current_user;
+		$posts_table = $wpdb->prefix . 'posts';
+		$db = new ARCJudgDB;
+    $judgments_table = $db->get_name();
+		$base_url = 'https://local.sandbox/?page_id=4868';
+
+		// get url vars
+		$comp_num = sanitize_text_field(get_query_var('comp_num'));
+		$task_num = sanitize_text_field(get_query_var('task_num'));
+
+		// get list of titles from db
+		$sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%' AND `user_id` = {$current_user->ID}";
+		$titles = $wpdb->get_results($sql);
+
+		// loop over titles, displaying post title & excerpt for each
+		foreach($titles as $title_obj) {
+			$title = $title_obj->resp_title;
+			$sub_num = substr($title,strpos($title,'sub')+3,2);
+			$link = $base_url . "&comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";
+
+			$sql = "SELECT `post_content` FROM `{$posts_table}` WHERE `post_title` = '{$title}'";
+			$content_obj = ($wpdb->get_results($sql))[0];
+			$excerpt = substr($content_obj->post_content,0,300);
+
+			echo "<a href={$link}><h3>{$title}</h3></a>";
+			echo "{$excerpt}<br /><br />";
+		}
+	}
+}
+add_action('genesis_entry_content', 'gcac_display_ct_pair_list');
 
 // Add judge1 to url
 function arc_judge1_query_vars( $qvars ) {
@@ -185,6 +235,13 @@ function arc_task_query_vars( $qvars ) {
     return $qvars;
 }
 add_filter( 'query_vars', 'arc_task_query_vars' );
+
+// Add sub_num to url
+function arc_sub_query_vars( $qvars ) {
+    $qvars[] = 'sub_num';
+    return $qvars;
+}
+add_filter( 'query_vars', 'arc_sub_query_vars' );
 
 // Add block_num to url
 // function arc_block_query_vars( $qvars ) {

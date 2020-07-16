@@ -32,7 +32,7 @@ class JudgmentApp extends Component {
         2: "Proficient",
         3: "Master"
     };
-    
+
     /**
      * handleNext: checks whether the user is finished with the current set, saves the current line to
      *      the database, and sets the new startTime
@@ -74,7 +74,7 @@ class JudgmentApp extends Component {
             code_scheme: respObj.codeScheme,
             comment
         };
-        // console.log(dataObj)
+        console.log(dataObj)
 
         // Save to DB
         this.saveData(dataObj);
@@ -86,10 +86,10 @@ class JudgmentApp extends Component {
                     var localObj = JSON.parse(localStorage.getItem(key));
                     localObj._ajax_nonce = respObj.nonce;
                     // Save to DB
-                    this.saveData(localObj,key); 
+                    this.saveData(localObj,key);
                 } else {
                     console.log(typeof key);
-                }   
+                }
             } );
         }
 
@@ -98,7 +98,7 @@ class JudgmentApp extends Component {
         const newStartTime = Math.floor(newStartDate / 1000);
         this.setState(() => ({startTime: newStartTime}));
     }
-    
+
     /**
      * getCase: gets the new Response ID
      * Parameters: none
@@ -150,7 +150,7 @@ class JudgmentApp extends Component {
             <div>
                 { this.state.allDone && <ShowEnd />}
                 {!this.state.allDone &&
-                    <PresentContext 
+                    <PresentContext
                         scenario={respObj.sContent}
                         competencies={respObj.cDefinitions}
                         levelTitles={this.levelTitles}
@@ -164,9 +164,10 @@ class JudgmentApp extends Component {
                         response={ respObj.responses[this.state.respId] }
                         codes={codes}
                         handleNext={this.handleNext}
+												resultsObj={respObj.resultsObj}
                     />
                 }
-                { (!this.state.allDone && review) && 
+                { (!this.state.allDone && review) &&
                     <ReviewBox
                         respId={ this.state.respId }
                         response={ respObj.responses[this.state.respId] }

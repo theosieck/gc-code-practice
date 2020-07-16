@@ -4,7 +4,7 @@ class CommentBox extends Component {
     state = {
         error:undefined,
         commentMessage:"",
-        comments:""
+        comments: this.props.comment ? this.props.comment : ""
     }
 
     handleRationaleObj = (e) => {
@@ -37,8 +37,8 @@ class CommentBox extends Component {
     render() {
         return (
             <div id="rationale">
-                
-                {/*this.state.comments && 
+
+                {/*this.state.comments &&
                     <div>
                     <h2>Comments:</h2>
                     {ReactHtmlParser(this.state.comments)}
@@ -47,7 +47,7 @@ class CommentBox extends Component {
                 <h2>Comment:</h2>
                 {this.state.error && <span style={{color:"red"}}>{this.state.error}</span>}
                 <form onSubmit={this.handleRationaleObj}>
-                    <textarea name="rationale" cols={40} rows={5} maxLength={1000} required placeholder={"125 words or less"} />
+                    <textarea style={{marginBottom:"10px"}} name="rationale" cols={40} rows={5} maxLength={1000} placeholder={"125 words or less"}>{this.props.comment}</textarea>
                     <input type="submit" value="Save Comment" />
                     <button style={{marginLeft:"20px"}} onClick={this.props.handleCommentButton}>Nevermind, I don't have a comment</button>
                 </form>

@@ -7,7 +7,36 @@ import Rows from './Rows';
 import CommentBox from './CommentBox';
 
 class JudgmentBox extends Component {
-    state = {
+	genState = () => {
+		const results = this.props.resultsObj
+		let codes = [];
+		let excerpts = [];
+		let rows = [];
+		for(let i=1;i<10;i++) {
+			const codeNum = parseInt(results[`code${i}`])
+			codes[i] = codeNum
+			excerpts[i] = results[`excerpt${i}`]
+			if(codeNum===1) {
+				rows[i] = {
+					text: excerpts[i],
+					code: `${i}. ${this.props.codes[i]}`
+				}
+			}
+		}
+		const comment = results['judg_comments']
+		const doComment = !!comment
+		console.log(codes)
+		console.log(rows)
+		return {
+			rows,
+			codes,
+			excerpts,
+			doComment,
+			comment
+		}
+	}
+
+    state = this.props.resultsObj ? this.genState() : {
         rows:[],
         activeSelect:'',
         codes:[0,0,0,0,0,0,0,0,0,0],
@@ -46,14 +75,16 @@ class JudgmentBox extends Component {
             }
         }
     }
-    
+
     handleSelection = (selection) => {
         this.state.activeSelect = selection
     }
 
     handleDelete = (e) => {
         e.preventDefault()
+				console.log("deleting...")
         const code = e.target.id
+				console.log(code)
         this.setState((prevState) => ({
             rows: prevState.rows.filter((row) => row.code[0] != code),
             excerpts: prevState.excerpts.map((excerpt,i) => i == code ? '' : excerpt),
@@ -113,13 +144,14 @@ class JudgmentBox extends Component {
                 }
                 {this.state.doComment &&
                     <CommentBox
+												comment={this.state.comment}
                         handleComment={this.handleComment}
                         handleCommentButton={this.handleCommentButton}
                     />
                 }
                 </div>
                 <div style={{marginTop:"25px"}}>
-                <Rows 
+                <Rows
                     rows={this.state.rows}
                     handleDelete={this.handleDelete}
                     showDelete={true}
