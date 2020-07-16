@@ -74,7 +74,7 @@ class JudgmentApp extends Component {
             code_scheme: respObj.codeScheme,
             comment
         };
-        console.log(dataObj)
+        // console.log(dataObj)
 
         // Save to DB
         this.saveData(dataObj);

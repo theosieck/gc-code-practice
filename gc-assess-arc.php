@@ -94,7 +94,8 @@ function gcac_display_progress() {
   if(is_page('exemplar-assessment-progress') || $is_indep) {
     global $wpdb;
 		global $current_user;	// only needed for indep
-		$base_url = 'https://local.sandbox/?page_id=5100';	// only needed for indep
+		// $base_url = 'https://local.sandbox/?page_id=5100';	// only needed for indep
+		$ct_pair_page = get_site_url() . "/ct-pair-progress";
     $posts_table = $wpdb->prefix . 'posts';
     $db = new ARCJudgDB;
     $judgments_table = $db->get_name();
@@ -158,7 +159,8 @@ function gcac_display_progress() {
 
 				if($is_indep) {
 					// make url for editing coded exemplars
-					$list_url = $base_url . "&comp_num={$comp_num}&task_num={$task_num}";	// change leading & to ? in production
+					// $list_url = $base_url . "&comp_num={$comp_num}&task_num={$task_num}";	// local
+					$list_url = $ct_pair_page . "/?comp_num={$comp_num}&task_num={$task_num}";	// live
 				}
 
         // print counts
@@ -181,7 +183,8 @@ function gcac_display_ct_pair_list() {
 		$posts_table = $wpdb->prefix . 'posts';
 		$db = new ARCJudgDB;
     $judgments_table = $db->get_name();
-		$base_url = 'https://local.sandbox/?page_id=4868';
+		// $base_url = 'https://local.sandbox/?page_id=4868';
+		$exemplar_assess_page = get_site_url() . "/exemplar-assessment";
 
 		// get url vars
 		$comp_num = sanitize_text_field(get_query_var('comp_num'));
@@ -195,7 +198,8 @@ function gcac_display_ct_pair_list() {
 		foreach($titles as $title_obj) {
 			$title = $title_obj->resp_title;
 			$sub_num = substr($title,strpos($title,'sub')+3,2);
-			$link = $base_url . "&comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";
+			// $link = $base_url . "&comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";	// local
+			$link = $exemplar_assess_page . "/?comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";	// live
 
 			$sql = "SELECT `post_content` FROM `{$posts_table}` WHERE `post_title` = '{$title}'";
 			$content_obj = ($wpdb->get_results($sql))[0];
