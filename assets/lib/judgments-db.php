@@ -25,12 +25,13 @@ function gcac_create_table() {
     $sql = "CREATE TABLE $arc_table_name (
         judg_id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id mediumint(9) UNSIGNED NOT NULL,
+				project tinytext NOT NULL,
         sub_num smallint(5) UNSIGNED NOT NULL,
-		comp_num smallint(2) UNSIGNED NOT NULL,
-		task_num smallint(2) UNSIGNED NOT NULL,
-		resp_title tinytext NOT NULL,
+				comp_num smallint(2) UNSIGNED NOT NULL,
+				task_num smallint(2) UNSIGNED NOT NULL,
+				resp_title tinytext NOT NULL,
         judg_type tinytext NOT NULL,
-		judg_time time NOT NULL,
+				judg_time time NOT NULL,
         code_scheme float unsigned NOT NULL,
         code1 smallint(1) UNSIGNED NOT NULL,
         code2 smallint(1) UNSIGNED NOT NULL,
@@ -74,7 +75,7 @@ function arc_pull_data_cpts($comp_num, $task_num, $sub_num) {
 		$results_obj = NULL;
 		// check whether we want one post or all of them
 		if($sub_num) {
-			$sql = "SELECT * FROM `{$judgments_table}` WHERE `sub_num` = {$sub_num} AND `comp_num` = {$comp_num} AND `task_num` = {$task_num}";
+			$sql = "SELECT * FROM `{$judgments_table}` WHERE `sub_num` = {$sub_num} AND `comp_num` = {$comp_num} AND `task_num` = {$task_num} AND `judg_type` = 'ind'";
 			$results = $wpdb->get_results($sql);
 			$results_obj = $results[count($results)-1];
 			$meta_query = array(

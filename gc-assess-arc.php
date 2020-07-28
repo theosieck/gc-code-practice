@@ -1,7 +1,7 @@
 <?php
 /*
    Plugin Name: GC Code ARC
-   Version: 1.0.0
+   Version: 1.5.0
    Author: Global Cognition
    Author URI: https://www.globalcognition.org
    Description: Serve up responses for feature coding
@@ -22,8 +22,7 @@ register_activation_hook(__FILE__,'gcac_create_table'); // this function call ha
 
 function gc_assess_arc_enqueue_scripts() {
 
-  if( is_page( 'exemplar-assessment' ) ) {
-
+  if( is_page( 'coding/live' ) ) {
       global $current_user;
       get_currentuserinfo();
       if ( $current_user->ID) {
@@ -90,12 +89,12 @@ add_action( 'wp_enqueue_scripts', 'gc_assess_arc_enqueue_styles' );
  * Display current judgment progress
  */
 function gcac_display_progress() {
-	$is_indep = is_page('independent-exemplar-assessment-progress');
-  if(is_page('exemplar-assessment-progress') || $is_indep) {
+	$is_indep = is_page('progress');
+  if(is_page('manage/team-progress') || $is_indep) {
     global $wpdb;
 		global $current_user;	// only needed for indep
 		// $base_url = 'https://local.sandbox/?page_id=5100';	// only needed for indep
-		$ct_pair_page = get_site_url() . "/ct-pair-progress";
+		$ct_pair_page = get_site_url() . "/progress/coded-cases";
     $posts_table = $wpdb->prefix . 'posts';
     $db = new ARCJudgDB;
     $judgments_table = $db->get_name();
@@ -155,6 +154,9 @@ function gcac_display_progress() {
         $num_coded_responses = count($wpdb->get_results($sql));
         // get total number of reviewed responses
         $sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%' AND `judg_type` = 'rev'";
+				if($is_indep) {
+					$sql .= " AND `user_id` = {$current_user->ID}";
+				}
         $num_reviewed_responses = count($wpdb->get_results($sql));
 
 				if($is_indep) {
@@ -177,21 +179,21 @@ add_action('genesis_entry_content','gcac_display_progress');
  * display list of coded posts for given task/competency pair
 */
 function gcac_display_ct_pair_list() {
-	if(is_page('ct-pair-progress')) {
+	if(is_page('progress/coded-cases')) {
 		global $wpdb;
 		global $current_user;
 		$posts_table = $wpdb->prefix . 'posts';
 		$db = new ARCJudgDB;
     $judgments_table = $db->get_name();
 		// $base_url = 'https://local.sandbox/?page_id=4868';
-		$exemplar_assess_page = get_site_url() . "/exemplar-assessment";
+		$assess_page = get_site_url() . "/coding/live";
 
 		// get url vars
 		$comp_num = sanitize_text_field(get_query_var('comp_num'));
 		$task_num = sanitize_text_field(get_query_var('task_num'));
 
 		// get list of titles from db
-		$sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%' AND `user_id` = {$current_user->ID}";
+		$sql = "SELECT DISTINCT `resp_title` FROM `{$judgments_table}` WHERE `resp_title` LIKE 'c{$comp_num}-t{$task_num}-%' AND `user_id` = {$current_user->ID} AND `judg_type` = 'ind'";
 		$titles = $wpdb->get_results($sql);
 
 		// loop over titles, displaying post title & excerpt for each
@@ -199,7 +201,7 @@ function gcac_display_ct_pair_list() {
 			$title = $title_obj->resp_title;
 			$sub_num = substr($title,strpos($title,'sub')+3,2);
 			// $link = $base_url . "&comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";	// local
-			$link = $exemplar_assess_page . "/?comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";	// live
+			$link = $assess_page . "/?comp_num={$comp_num}&task_num={$task_num}&sub_num={$sub_num}";	// live
 
 			$sql = "SELECT `post_content` FROM `{$posts_table}` WHERE `post_title` = '{$title}'";
 			$content_obj = ($wpdb->get_results($sql))[0];

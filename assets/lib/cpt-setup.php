@@ -1,31 +1,31 @@
 <?php
 /*
- * Sets up the Exemplar, Competency, and Scenario CPTs.
+ * Sets up the Response, Competency, and Scenario CPTs.
  */
 namespace GC\ARC\Custom;
-add_action('init',__NAMESPACE__ . '\arc_register_cpt_exemplar');
+add_action('init',__NAMESPACE__ . '\arc_register_cpt_response');
 /*
- * Adds the "Exemplar" custom post type
+ * Adds the "Response" custom post type
  */
-function arc_register_cpt_exemplar() {
+function arc_register_cpt_response() {
     $labels = array(
-        'name' => _x('Exemplars','exemplars'),
-        'singular_name' => _x('Exemplar','exemplar'),
-        'all_items' => ('All Exemplars'),
-        'add_new_item' => ('Add New Exemplar'),
-        'edit_item' => ('Edit Exemplar'),
-        'search_items' => ('Search Exemplars'),
-        'view_item' => ('View Exemplar'),
+        'name' => _x('Responses','responses'),
+        'singular_name' => _x('Response','response'),
+        'all_items' => ('All Responses'),
+        'add_new_item' => ('Add New Response'),
+        'edit_item' => ('Edit Response'),
+        'search_items' => ('Search Responses'),
+        'view_item' => ('View Response'),
     );
     $args = array(
-        'label' => __('Exemplars', 'exemplars'),
+        'label' => __('Responses', 'responses'),
         'labels' => $labels,
         'public' => true,
         'taxonomies' => array('category'),
         'show_in_rest' => true,
         'supports' => array('editor', 'title')
     );
-    register_post_type('exemplar',$args);
+    register_post_type('response',$args);
 }
 
 add_action('init',__NAMESPACE__ . '\arc_register_cpt_competency');
