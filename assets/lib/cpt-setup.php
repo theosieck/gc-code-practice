@@ -28,6 +28,31 @@ function arc_register_cpt_response() {
     register_post_type('response',$args);
 }
 
+add_action('init',__NAMESPACE__ . '\arc_register_cpt_exemplar');
+/*
+ * Adds the "Exemplar" custom post type
+ */
+function arc_register_cpt_exemplar() {
+    $labels = array(
+        'name' => _x('Exemplars','exemplars'),
+        'singular_name' => _x('Exemplar','exemplar'),
+        'all_items' => ('All Exemplars'),
+        'add_new_item' => ('Add New Exemplar'),
+        'edit_item' => ('Edit Exemplar'),
+        'search_items' => ('Search Exemplars'),
+        'view_item' => ('View Exemplar'),
+    );
+    $args = array(
+        'label' => __('Exemplars', 'exemplars'),
+        'labels' => $labels,
+        'public' => true,
+        'taxonomies' => array('category'),
+        'show_in_rest' => true,
+        'supports' => array('editor', 'title')
+    );
+    register_post_type('exemplar',$args);
+}
+
 add_action('init',__NAMESPACE__ . '\arc_register_cpt_competency');
 /*
  * Adds the "Competency" custom post type

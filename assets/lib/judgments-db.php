@@ -66,7 +66,8 @@ function gcac_create_table() {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num, $sub_num) {
+function arc_pull_data_cpts($comp_num, $task_num, $sub_num, $block_num) {
+		global $gc_project;
     global $current_user;
     global $wpdb;
     $db = new ARCJudgDB;
@@ -75,52 +76,60 @@ function arc_pull_data_cpts($comp_num, $task_num, $sub_num) {
 		$results_obj = NULL;
 		// check whether we want one post or all of them
 		if($sub_num) {
-			$sql = "SELECT * FROM `{$judgments_table}` WHERE `sub_num` = {$sub_num} AND `comp_num` = {$comp_num} AND `task_num` = {$task_num} AND `judg_type` = 'ind'";
+			$sql = "SELECT * FROM `{$judgments_table}` WHERE `sub_num` = {$sub_num} AND `comp_num` = {$comp_num} AND `task_num` = {$task_num} AND `judg_type` = 'ind' AND `user_id` = {$current_user->ID}";
 			$results = $wpdb->get_results($sql);
 			$results_obj = $results[count($results)-1];
-			$meta_query = array(
+		}
+
+		// set up meta query
+		$meta_query = array(
+				'relation' => 'AND',
+				array(
+						'key' => 'comp_num',
+						'value' => $comp_num,
+						'compare' => '=',
+				),
+				array(
 					'relation' => 'AND',
 					array(
-							'key' => 'comp_num',
-							'value' => $comp_num,
-							'compare' => '=',
+						'key' => 'task_num',
+						'value' => $task_num,
+						'compare' => '=',
 					),
 					array(
-						'relation' => 'AND',
-						array(
-								'key' => 'task_num',
-								'value' => $task_num,
-								'compare' => '=',
-						),
-						array(
-							'key' => 'sub_num',
-							'value' => $sub_num,
-							'compare' => '=',
-						),
+						'key' => 'project',
+						'value' => $gc_project,
+						'compare' => '=',
 					),
-				);
-		} else {
-			$meta_query = array(
-          'relation' => 'AND',
-          array(
-              'key' => 'comp_num',
-              'value' => $comp_num,
-              'compare' => '=',
-          ),
-          array(
-              'key' => 'task_num',
-              'value' => $task_num,
-              'compare' => '=',
-          ),
-        );
+				),
+			);
+		if($sub_num || $block_num) {
+			// if sub_num is given, we don't need the block number because sub_num is more specific
+			$meta_query[1][1] = array(
+				'relation' => 'AND',
+				array(
+					'key' => $sub_num ? 'sub_num' : 'block_num',
+					'value' => $sub_num ? $sub_num : $block_num,
+					'compare' => '=',
+				),
+				array(
+					'key' => 'project',
+					'value' => $gc_project,
+					'compare' => '=',
+				),
+			);
 		}
+
+		// ddd($meta_query);
 
 		$resp_args = array(
 			'numberposts' => -1,
-			'post_type' => 'exemplar',
+			'post_type' => 'response',
 			'meta_query' => $meta_query
 		);
     $all_responses = get_posts($resp_args);
+		// d($resp_args);
+		// ddd($all_responses);
     $responses = [];
     $total = 0;
     $for_assessment = 0;
@@ -202,21 +211,31 @@ function arc_pull_data_cpts($comp_num, $task_num, $sub_num) {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num, user ids.
  */
-function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
+function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num) {
     global $current_user;
     global $wpdb;
+		global $gc_project;
 
     $db = new ARCJudgDB;
     // echo 'new echo statement';
     // get all the data for the given comp and task nums
-    $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind'";
+    $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind' AND project = '{$gc_project}'";
     $all_data = $db->get_all_arraya($where);
+
     // organize the data into a multi-dimensional array where the key is the subject number and the value is
     // an array of all the db lines for that subject, indexed by user id
     $all_subs = [];
     foreach ($all_data as $sub) {
-        // this only keeps the most recent judgement for the given user id
-        $all_subs[$sub['sub_num']][$sub['user_id']] = $sub;
+			if($block_num) {
+				$response_id = get_page_by_title($sub['resp_title'], 'OBJECT', 'response')->ID;
+				$response_bn = get_post_meta($response_id,'block_num',true);
+				if($response_bn===$block_num) {
+					// this only keeps the most recent judgement for the given user id
+	        $all_subs[$sub['sub_num']][$sub['user_id']] = $sub;
+				}
+			} else {
+				$all_subs[$sub['sub_num']][$sub['user_id']] = $sub;
+			}
     }
     if(empty($all_subs)) {
         return "Need assessments from both raters";
@@ -231,7 +250,7 @@ function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num) {
         if($sub[$judge1] && $sub[$judge2]) {
             // get the response information for this subject
             $title = $sub[$judge1]['resp_title'];
-            $response = get_page_by_title($title, 'OBJECT', 'exemplar');
+            $response = get_page_by_title($title, 'OBJECT', 'response');
             $resp_id = $response->ID;
             $resp_ids[] = $resp_id;
             $sub_nums[] = $sub_num;

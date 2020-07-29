@@ -7,6 +7,7 @@
  * Add columns to admin post list
  */
 function gcac_exemplar_columns($defaults) {
+		$defaults['project'] = 'Project';
     $defaults['comp_num'] = 'Competency Number';
     $defaults['task_num'] = 'Scenario ID';
     $defaults['sub_num'] = 'Participant ID';
@@ -15,6 +16,7 @@ function gcac_exemplar_columns($defaults) {
 add_filter('manage_exemplar_posts_columns','gcac_exemplar_columns');
 
 function gcac_response_columns($defaults) {
+		$defaults['project'] = 'Project';
     $defaults['comp_num'] = 'Competency Number';
     $defaults['task_num'] = 'Scenario ID';
     $defaults['sub_num'] = 'Participant ID';
