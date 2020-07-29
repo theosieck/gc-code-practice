@@ -17,11 +17,60 @@ include_once 'assets/lib/post-list-additions.php';
 require_once( 'assets/lib/plugin-page.php' );
 
 global $gc_project;
-$gc_project = 'ARCL Exemplars';	// change this to change project
-
+$gc_project = get_post_meta(get_page_by_title('Manage')->ID,'project',true);
 
 // Call gcaa_create_table on plugin activation.
 register_activation_hook(__FILE__,'gcac_create_table'); // this function call has to happen here
+
+/**
+ * set global variable
+*/
+function gc_set_project() {
+	if(is_page('manage')) {
+		global $gc_project;
+		// $base_url = get_site_url() . '/?page_id=6123&new_project=';	// local
+		$base_url = get_site_url() . '/manage/?new_project=';	// live
+
+		// if new project set, update the project var
+		$new_project = sanitize_text_field(get_query_var('new_project'));
+		if($new_project) {
+			$gc_project = $new_project;
+			update_post_meta(get_page_by_title('Manage')->ID,'project',$new_project);
+		}
+
+		// print headings
+		echo "<h3>Current Project: {$gc_project}</h3>";
+		echo "<h3>Project Options:</h3>";
+
+		// generate project options
+		$gc_project_options = explode(',',get_post_meta(get_page_by_title('Manage')->ID,'project_options',true));
+		foreach($gc_project_options as $option) {
+			// generate link with option variable
+			$var_url = $base_url . str_replace(' ','+',$option);
+			// generate button
+			echo "<a href='{$var_url}'><button>{$option}</button></a><br /><br />";
+		}
+
+		// allow user to add new project
+		echo "<h3>Add New Project:</h3>";
+		echo "<p>I'll have an input box here to add a new project</p>";
+
+		// link to team progress
+		echo "<a href='" . get_site_url() . "/team-progress'><h3>Team Progress Page</h3></a>";	// this link won't work on local
+	}
+}
+add_action('genesis_entry_content','gc_set_project');
+
+/**
+ * print clarifying info to the user based on which project is active
+*/
+function gc_print_instructions() {
+	global $gc_project;
+	if(strpos($gc_project,'Exemplar') && (is_page('coding') || is_page('consensus'))) {
+		echo "<p>Leave 'Block Number' as 0 for this project.</p>";
+	}
+}
+add_action('genesis_entry_content','gc_print_instructions');
 
 function gc_assess_arc_enqueue_scripts() {
 
@@ -296,6 +345,13 @@ function arc_review_query_vars( $qvars ) {
     return $qvars;
 }
 add_filter( 'query_vars', 'arc_review_query_vars' );
+
+// Add new_project to url
+function arc_project_query_vars( $qvars ) {
+    $qvars[] = 'new_project';
+    return $qvars;
+}
+add_filter( 'query_vars', 'arc_project_query_vars' );
 
 // Genesis activation hook
 add_action('wp_ajax_arc_save_data','arc_save_data');
