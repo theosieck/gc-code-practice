@@ -1,2 +1,2 @@
-# gc-assess-arc
-serves up responses for assessment
+# gc-code-practice
+serves up exemplars for assessment

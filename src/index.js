@@ -1,4 +1,4 @@
 
-import JudgmentApp from './JudgmentApp';
+import PracticeApp from './PracticeApp';
 
-wp.element.render(<JudgmentApp />, document.querySelector( '.entry-content' ) );
+wp.element.render(<PracticeApp />, document.querySelector( '.entry-content' ) );

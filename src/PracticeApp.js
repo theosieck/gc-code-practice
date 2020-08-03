@@ -1,32 +1,30 @@
-// respObj imported from php
-//   respIds responses cDefinitions cTitles sContent sTitle
+// expObj imported from php
+//   expIds exemplars cDefinitions cTitles sContent sTitle
 
 const { Component } = wp.element;
 //import './judgmentapp.scss';
 import PresentContext from './PresentContext';
 import ShowEnd from './ShowEnd';
-import ReviewBox from './ReviewBox';
-import JudgmentBox from './JudgmentBox';
+import PracticeBox from './PracticeBox';
 
-const review = respObj.review == '1';
-const nTrials = respObj.respIds.length;
+const review = expObj.review == '1';
+const nTrials = expObj.expIds.length;
 let codes = [];
-const numCodes = respObj.numCodes;
+const numCodes = expObj.numCodes;
 for(let i=1;i<=numCodes;i++) {
-    codes[i] = respObj.codeLabels[i];
+    codes[i] = expObj.codeLabels[i];
 }
 
-class JudgmentApp extends Component {
+class PracticeApp extends Component {
     // Tracks various attributes and their changes as the user moves through the trials
     startDate = Date.now();  // UNIX time on page load
     state = {
         trial: 1,   // Each judgment is one trial
-        respId: respObj.respIds[0],   // The ID of the Response being judged
+        expId: expObj.expIds[0],   // The ID of the Exemplar being judged
         startTime: Math.floor(this.startDate / 1000),    // UNIX time on page load, in seconds
         allDone: false // Whether the 'ShowEnd' component should be displayed
-        // showMatches: review,  // display total number matches
     };
-    // Labels for Response judgments
+		// Labels for Response judgments
     levelTitles = {
         1: "Less Skilled",
         2: "Proficient",
@@ -39,7 +37,7 @@ class JudgmentApp extends Component {
      * Parameters: none
      * Fires: when the user clicks the 'Next' button
      */
-    handleNext = (excerpts,codes,comment) => {
+    handleNext = (excerpts,codes,correctCodes,missedCodes,falsePositives) => {
         // Check whether the user has finished all the trials
         if (this.state.trial < nTrials) {
             this.setState((prevState) => ({
@@ -58,21 +56,25 @@ class JudgmentApp extends Component {
         const judgTime = endTime - this.state.startTime;
 
         let codesArray = []
+				let correctCodesArray = []
         for(let i=1;i<=numCodes;i++) {
             codesArray[i] = [codes[i],excerpts[i]]
+						if(correctCodes.includes(i)) {
+							correctCodesArray.push(i)
+						}
         }
 
         var dataObj = {
-            sub_num: respObj.subNums[this.state.trial-1],
-            comp_num: respObj.compNum,
-            task_num: respObj.taskNum,
-            resp_id: this.state.respId,
-            judg_type: review ? 'rev' : 'ind',
+            sub_num: expObj.subNums[this.state.trial-1],
+            comp_num: expObj.compNum,
+            task_num: expObj.taskNum,
+            exp_id: this.state.expId,
             judg_time: judgTime,
             codes: codesArray,
-            judges: respObj.judges,
-            code_scheme: respObj.codeScheme,
-            comment
+            code_scheme: expObj.codeScheme,
+						correctCodes:correctCodesArray,
+						missedCodes,
+						falsePositives
         };
         // console.log(dataObj)
 
@@ -84,7 +86,7 @@ class JudgmentApp extends Component {
             keys.forEach((key) => {
                 if(localStorage.getItem(key)!=null && localStorage.getItem(key)!=undefined && localStorage.getItem(key)!="") {
                     var localObj = JSON.parse(localStorage.getItem(key));
-                    localObj._ajax_nonce = respObj.nonce;
+                    localObj._ajax_nonce = expObj.nonce;
                     // Save to DB
                     this.saveData(localObj,key);
                 } else {
@@ -100,13 +102,13 @@ class JudgmentApp extends Component {
     }
 
     /**
-     * getCase: gets the new Response ID
+     * getCase: gets the new Exemplar ID
      * Parameters: none
      * Fires: inside handleNext
      */
     getCase = () => {
         this.setState(() => ({
-            respId: respObj.respIds[this.state.trial - 1]
+            expId: expObj.expIds[this.state.trial - 1]
         }));
     }
 
@@ -114,18 +116,19 @@ class JudgmentApp extends Component {
      * Saves the given dataObj to the database
      */
     saveData = (dataObj,key = null) => {
-        dataObj.action = 'arc_save_data';
-        dataObj._ajax_nonce = respObj.nonce;
+        dataObj.action = 'save_prac_data';
+        dataObj._ajax_nonce = expObj.nonce;
 
         jQuery.ajax({
             type : 'post',
             dataType: 'json',
-            url : respObj.ajax_url,
+            url : expObj.ajax_url,
             data : dataObj,
-            error : function( response ) {
+            error : function( e ) {
                 console.log("something went wrong (error case)");
+								console.log(e);
                 // save to localStorage
-                localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+                localStorage.setItem(JSON.stringify(dataObj.exp_id),JSON.stringify(dataObj));
             },
             success : function( response ) {
                 if( response.type == 'success' && dataObj.sub_num == response.data.sub_num) {
@@ -135,53 +138,42 @@ class JudgmentApp extends Component {
                     }
                 } else {
                     console.log("something went wrong");
+										console.log(response);
                     // save to localStorage
-                    localStorage.setItem(JSON.stringify(dataObj.resp_id),JSON.stringify(dataObj));
+                    localStorage.setItem(JSON.stringify(dataObj.exp_id),JSON.stringify(dataObj));
                 }
             }
         });
     }
 
     /**
-     * Renders the components for JudgmentApp
+     * Renders the components for PracticeApp
      */
     render() {
         return (
             <div>
                 { this.state.allDone && <ShowEnd />}
                 {!this.state.allDone &&
+									<div>
                     <PresentContext
-                        scenario={respObj.sContent}
-                        competencies={respObj.cDefinitions}
+                        scenario={expObj.sContent}
+                        competencies={expObj.cDefinitions}
                         levelTitles={this.levelTitles}
-                        sTitle={respObj.sTitle}
-                        cTitle={respObj.cTitles[0]}
+                        sTitle={expObj.sTitle}
+                        cTitle={expObj.cTitles[0]}
                     />
-                }
-                { (!this.state.allDone && !review) &&
-                    <JudgmentBox
-                        respId={ this.state.respId }
-                        response={ respObj.responses[this.state.respId] }
+										<PracticeBox
+                        expId={ this.state.expId }
+                        response={ expObj.exemplars[this.state.expId] }
                         codes={codes}
                         handleNext={this.handleNext}
-												resultsObj={respObj.resultsObj}
+												goldCodes={expObj.goldCodes[this.state.expId]}
                     />
-                }
-                { (!this.state.allDone && review) &&
-                    <ReviewBox
-                        respId={ this.state.respId }
-                        response={ respObj.responses[this.state.respId] }
-                        codes={codes}
-                        handleNext={this.handleNext}
-                        reviewSet={respObj.reviewSet[respObj.subNums[this.state.trial-1]]}
-                        matches={respObj.matches[respObj.subNums[this.state.trial-1]]}
-                        judge1Comments={respObj.judge1Comments[this.state.respId]}
-                        judge2Comments={respObj.judge2Comments[this.state.respId]}
-                    />
+									</div>
                 }
             </div>
         );
     }
 }
 
-export default JudgmentApp;
+export default PracticeApp;

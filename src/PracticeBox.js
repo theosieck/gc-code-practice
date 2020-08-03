@@ -1,12 +1,12 @@
 const { Component } = wp.element;
 
 import Grid from '@material-ui/core/Grid';
-import PresentResp from './PresentResp';
+import PresentExp from './PresentExp';
 import Codes from './Codes';
 import Rows from './Rows';
-import CommentBox from './CommentBox';
+import ShowFeedback from './ShowFeedback';
 
-class JudgmentBox extends Component {
+class PracticeBox extends Component {
 	genState = () => {
 		const results = this.props.resultsObj
 		let codes = [];
@@ -23,16 +23,14 @@ class JudgmentBox extends Component {
 				}
 			}
 		}
-		const comment = results['judg_comments']
-		const doComment = !!comment
-		console.log(codes)
-		console.log(rows)
 		return {
 			rows,
 			codes,
 			excerpts,
-			doComment,
-			comment
+			feedback: false,
+			correctCodes:[],
+			missedCodes:[],
+			falsePositives:[]
 		}
 	}
 
@@ -41,8 +39,10 @@ class JudgmentBox extends Component {
         activeSelect:'',
         codes:[0,0,0,0,0,0,0,0,0,0],
         excerpts:['','','','','','','','','',''],
-        doComment:false,
-        comment:""
+				feedback: false,
+				correctCodes:[],
+				missedCodes:[],
+				falsePositives:[]
     }
 
     divStyle = {
@@ -92,17 +92,30 @@ class JudgmentBox extends Component {
         }))
     }
 
-    handleCommentButton = (e) => {
-        e.preventDefault()
-        this.setState((prevState) => ({
-            doComment:!prevState.doComment,
-            comment:""
-        }))
-    }
-
-    handleComment = (comment) => {
-        this.setState(() => ({comment}))
-    }
+		handleSubmit = (e) => {
+			e.preventDefault();
+			const correctCodes = [];
+			const missedCodes = [];
+			const falsePositives = [];
+			this.state.codes.forEach((code,index) => {
+				if(code) {
+					// learner selected
+					if(this.props.goldCodes.includes(index.toString())) {
+						correctCodes.push(index)
+					} else {
+						falsePositives.push(index)
+					}
+				} else {
+					// learner did not select
+					if(this.props.goldCodes.includes(index.toString())) {
+						missedCodes.push(index)
+					} else {
+						correctCodes.push(index)
+					}
+				}
+			});
+			this.setState(() => ({feedback:true,correctCodes,missedCodes,falsePositives}));
+		}
 
     handleNext = (e) => {
         e.preventDefault();
@@ -111,10 +124,12 @@ class JudgmentBox extends Component {
             activeSelect:'',
             codes:[0,0,0,0,0,0,0,0,0],
             excerpts:['','','','','','','','',''],
-            doComment:false,
-            comment:""
+						feedback: false,
+						correctCodes:[],
+						missedCodes:[],
+						falsePositives:[]
         }))
-        this.props.handleNext(this.state.excerpts,this.state.codes,this.state.comment);
+        this.props.handleNext(this.state.excerpts,this.state.codes,this.state.correctCodes,this.state.missedCodes,this.state.falsePositives);
     }
 
     render() {
@@ -123,8 +138,8 @@ class JudgmentBox extends Component {
                 <div style={this.divStyle}>
                 <Grid container direction="row" justify="space-between" alignItems="flex-start">
                     <Grid item xs={8} zeroMinWidth>
-                    <PresentResp
-                        respId={ this.props.respId }
+                    <PresentExp
+                        expId={ this.props.expId }
                         response={ this.props.response }
                         handleSelection={this.handleSelection}
                     />
@@ -139,28 +154,25 @@ class JudgmentBox extends Component {
                 </Grid>
                 </div>
                 <div style={{marginTop:"25px"}}>
-                {!this.state.doComment &&
-                    <button onClick={this.handleCommentButton}>Add A Comment</button>
-                }
-                {this.state.doComment &&
-                    <CommentBox
-												comment={this.state.comment}
-                        handleComment={this.handleComment}
-                        handleCommentButton={this.handleCommentButton}
-                    />
-                }
-                </div>
-                <div style={{marginTop:"25px"}}>
                 <Rows
                     rows={this.state.rows}
                     handleDelete={this.handleDelete}
                     showDelete={true}
                 />
                 </div>
-                <button style={{marginTop:"10px"}} onClick={this.handleNext}>Next</button>
+                {!this.state.feedback && <button style={{marginTop:"10px"}} onClick={this.handleSubmit}>Submit</button>}
+								{this.state.feedback &&
+									<ShowFeedback
+										correctCodes={this.state.correctCodes}
+										missedCodes={this.state.missedCodes}
+										falsePositives={this.state.falsePositives}
+										codeLabels={this.props.codes}
+										handleNext={this.handleNext}
+									/>
+								}
             </div>
         );
     }
 }
 
-export default JudgmentBox
+export default PracticeBox

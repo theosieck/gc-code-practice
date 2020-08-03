@@ -4,8 +4,8 @@
    Version: 1.0.0
    Author: Global Cognition
    Author URI: https://www.globalcognition.org
-   Description: Serve up responses for assessment
-   Text Domain: gc-assess-arc
+   Description: Serve up exemplars for assessment
+   Text Domain: gc-code-practice
    License: GPLv3
 */
 
@@ -13,8 +13,8 @@ defined( 'ABSPATH' ) or die( 'No direct access!' );
 
 include_once 'assets/lib/cpt-setup.php';
 include_once 'assets/lib/judgments-db.php';
-// Call gcaa_create_table on plugin activation.
-register_activation_hook(__FILE__,'gcaa_create_table'); // this function call has to happen here
+// Call gcpc_create_table on plugin activation.
+register_activation_hook(__FILE__,'gcpc_create_table'); // this function call has to happen here
 
 
 function gc_assess_arc_enqueue_scripts() {
@@ -26,7 +26,7 @@ function gc_assess_arc_enqueue_scripts() {
       if ( $current_user->ID) {
 
           wp_enqueue_script(
-              'gcaa-main-js',
+              'gcpc-main-js',
               plugins_url('/assets/js/main.js', __FILE__),
               ['wp-element', 'wp-components', 'jquery'],
               time(),
@@ -47,8 +47,8 @@ function gc_assess_arc_enqueue_scripts() {
               'review' => $review
             );
           $data_for_js = array_merge($data_for_js,$other_data);
-        // pass exemplars, scenarios, and competencies to Judgment App
-          wp_localize_script('gcaa-main-js', 'respObj', $data_for_js);
+        // pass exemplars, scenarios, and competencies to Practice App
+          wp_localize_script('gcpc-main-js', 'expObj', $data_for_js);
 
       } else {
           echo "please log in";
@@ -62,7 +62,7 @@ add_action( 'wp_enqueue_scripts', 'gc_assess_arc_enqueue_scripts' );
 function gc_assess_arc_enqueue_styles() {
 
   wp_enqueue_style(
-    'gcaa-main-css',
+    'gcpc-main-css',
     plugins_url( '/assets/css/main.css', __FILE__ ),
     [],
     time(),
@@ -100,7 +100,7 @@ add_action('wp_ajax_arc_save_data','arc_save_data');
  * Calls the insert function from the class ARCJudgDB to insert response data into the table
  */
 function arc_save_data() {
-    check_ajax_referer('gcaa_scores_nonce');
+    check_ajax_referer('gcpc_scores_nonce');
     global $current_user;
     $db = new ARCJudgDB;
     // Get data from React components

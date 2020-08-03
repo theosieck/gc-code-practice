@@ -1,9 +1,9 @@
 import ReactHtmlParser from 'react-html-parser';
 import Highlightable from 'highlightable';
 
-const PresentResp = (props) => (
+const PresentExp = (props) => (
     <div>
-        <h2>Case: {props.respId}</h2>
+        <h2>Case: {props.expId}</h2>
         <div onMouseUp={() => {props.handleSelection(window.getSelection().toString())}}>{ReactHtmlParser(props.response)}</div>
         {/*<Highlightable
             ranges={[{'text':ReactHtmlParser(props.response)}]} 
@@ -15,4 +15,4 @@ const PresentResp = (props) => (
     </div>
 );
 
-export default PresentResp;
+export default PresentExp;

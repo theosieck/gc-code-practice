@@ -6,13 +6,13 @@ global $db_version;
 $db_version = '1.0';
 
 global $code_table_postfix;
-$code_table_postfix = 'gc_apply_codes';
+$code_table_postfix = 'gc_prac_code';
 
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
  * Creates the table "wp_gc_apply_codes" in the database.
  */
-function gcac_create_table() {
+function gcpc_create_table() {
     global $wpdb;
     global $db_version;
     global $code_table_postfix;
@@ -29,8 +29,7 @@ function gcac_create_table() {
         sub_num smallint(5) UNSIGNED NOT NULL,
 				comp_num smallint(2) UNSIGNED NOT NULL,
 				task_num smallint(2) UNSIGNED NOT NULL,
-				resp_title tinytext NOT NULL,
-        judg_type tinytext NOT NULL,
+				exp_title tinytext NOT NULL,
 				judg_time time NOT NULL,
         code_scheme float unsigned NOT NULL,
         code1 smallint(1) UNSIGNED NOT NULL,
@@ -51,9 +50,9 @@ function gcac_create_table() {
         excerpt7 longtext,
         excerpt8 longtext,
         excerpt9 longtext,
-        judg_comments longtext,
-        rater1 mediumint(9) UNSIGNED,
-        rater2 mediumint(9) UNSIGNED,
+				correct_codes longtext,
+				missed_codes longtext,
+				false_positives longtext,
         PRIMARY KEY (judg_id)
 	) $charset_collate;";
 
@@ -66,20 +65,12 @@ function gcac_create_table() {
 /*
  * Pulls relevant data from the CPTs using given $comp_num, $task_num.
  */
-function arc_pull_data_cpts($comp_num, $task_num, $sub_num, $block_num) {
+function gcpc_pull_data_cpts($comp_num, $task_num) {
 		global $gc_project;
     global $current_user;
     global $wpdb;
-    $db = new ARCJudgDB;
+    $db = new PracJudgDB;
 		$judgments_table = $db->get_name();
-
-		$results_obj = NULL;
-		// check whether we want one post or all of them
-		if($sub_num) {
-			$sql = "SELECT * FROM `{$judgments_table}` WHERE `sub_num` = {$sub_num} AND `comp_num` = {$comp_num} AND `task_num` = {$task_num} AND `judg_type` = 'ind' AND `user_id` = {$current_user->ID}";
-			$results = $wpdb->get_results($sql);
-			$results_obj = $results[count($results)-1];
-		}
 
 		// set up meta query
 		$meta_query = array(
@@ -103,49 +94,29 @@ function arc_pull_data_cpts($comp_num, $task_num, $sub_num, $block_num) {
 					),
 				),
 			);
-		if($sub_num || $block_num) {
-			// if sub_num is given, we don't need the block number because sub_num is more specific
-			$meta_query[1][1] = array(
-				'relation' => 'AND',
-				array(
-					'key' => $sub_num ? 'sub_num' : 'block_num',
-					'value' => $sub_num ? $sub_num : $block_num,
-					'compare' => '=',
-				),
-				array(
-					'key' => 'project',
-					'value' => $gc_project,
-					'compare' => '=',
-				),
-			);
-		}
 
-		// ddd($meta_query);
-
-		$resp_args = array(
+		$exp_args = array(
 			'numberposts' => -1,
-			'post_type' => 'response',
+			'post_type' => 'exemplar',
 			'meta_query' => $meta_query
 		);
-    $all_responses = get_posts($resp_args);
-		// d($resp_args);
-		// ddd($all_responses);
-    $responses = [];
+    $all_exemplars = get_posts($exp_args);
+
+    $exemplars = [];
     $total = 0;
     $for_assessment = 0;
-    foreach($all_responses as $response) {
+    foreach($all_exemplars as $exemplar) {
         $total++;
-        $responses[] = $response;
+        $exemplars[] = $exemplar;
     }
-    // if(empty($responses)) {
-    //     return "You have assessed all the responses for this block.";
-    // }
-    shuffle($responses);
-    foreach ($responses as $response) {
-        $resp_id = $response->ID;
-        $resp_ids[] = $resp_id;
-        $sub_nums[] = $sub_num ? $sub_num : get_field('sub_num', $resp_id);
-        $resp_contents[$resp_id] = trim($response->post_content, '""');
+
+    shuffle($exemplars);
+    foreach ($exemplars as $exemplar) {
+        $exp_id = $exemplar->ID;
+        $exp_ids[] = $exp_id;
+        $sub_nums[] = $sub_num ? $sub_num : get_field('sub_num', $exp_id);
+        $exp_contents[$exp_id] = trim($exemplar->post_content, '""');
+				$gold_codes[$exp_id] = get_field('gold_codes',$exp_id);
     }
 
     $s_args = array(
@@ -191,171 +162,27 @@ function arc_pull_data_cpts($comp_num, $task_num, $sub_num, $block_num) {
 
     $data_for_js = array(
         'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('gcaa_scores_nonce'),
+        'nonce' => wp_create_nonce('gcpc_scores_nonce'),
         'sContent' => $s_content,
         'sTitle' => $s_title,
         'cDefinitions' => $c_defs,
         'cTitles' => $c_titles,
-        'respIds' => $resp_ids,
-        'responses' => $resp_contents,
+        'expIds' => $exp_ids,
+        'exemplars' => $exp_contents,
+				'goldCodes' => $gold_codes,
         'subNums' => $sub_nums,
         'codeLabels' => $code_labels,
         'numCodes' => $num_codes,
-        'codeScheme' => $code_scheme,
-				'resultsObj' => $results_obj
+        'codeScheme' => $code_scheme
     );
 
-    return $data_for_js;
-}
-
-/*
- * Pulls relevant data from the CPTs using given $comp_num, $task_num, user ids.
- */
-function arc_pull_review_data_cpts($judge1, $judge2, $comp_num, $task_num, $block_num) {
-    global $current_user;
-    global $wpdb;
-		global $gc_project;
-
-    $db = new ARCJudgDB;
-    // echo 'new echo statement';
-    // get all the data for the given comp and task nums
-    $where = "comp_num = {$comp_num} AND task_num = {$task_num} AND judg_type = 'ind' AND project = '{$gc_project}'";
-    $all_data = $db->get_all_arraya($where);
-
-    // organize the data into a multi-dimensional array where the key is the subject number and the value is
-    // an array of all the db lines for that subject, indexed by user id
-    $all_subs = [];
-    foreach ($all_data as $sub) {
-			if($block_num) {
-				$response_id = get_page_by_title($sub['resp_title'], 'OBJECT', 'response')->ID;
-				$response_bn = get_post_meta($response_id,'block_num',true);
-				if($response_bn===$block_num) {
-					// this only keeps the most recent judgement for the given user id
-	        $all_subs[$sub['sub_num']][$sub['user_id']] = $sub;
-				}
-			} else {
-				$all_subs[$sub['sub_num']][$sub['user_id']] = $sub;
-			}
-    }
-    if(empty($all_subs)) {
-        return "Need assessments from both raters";
-    }
-    // filter the db lines so that the subjects that have not yet been reviewed and have more than one
-    // response are added to the review set
-    $review_set = [];
-    $matches = [];
-    foreach($all_subs as $sub) {
-        $sub_num = $sub[$judge1]['sub_num']; // get the subject number
-        // check if both judges have assessed this subject
-        if($sub[$judge1] && $sub[$judge2]) {
-            // get the response information for this subject
-            $title = $sub[$judge1]['resp_title'];
-            $response = get_page_by_title($title, 'OBJECT', 'response');
-            $resp_id = $response->ID;
-            $resp_ids[] = $resp_id;
-            $sub_nums[] = $sub_num;
-            $resp_contents[$resp_id] = trim($response->post_content, '""');
-            $judge1_comments[$resp_id] = '';
-            $judge2_comments[$resp_id] = '';
-
-            // check for comments
-            $j1_comment = $sub[$judge1]['judg_comments'];
-            if($j1_comment) {
-                $judge1_comments[$resp_id] = $j1_comment;
-            }
-            $j2_comment = $sub[$judge2]['judg_comments'];
-            if($j2_comment) {
-                $judge2_comments[$resp_id] = $j2_comment;
-            }
-
-            // sort codes for this subject into matches and reviews
-            for($i=1;$i<10;$i++) {
-                $code_num = 'code' . $i;
-                // ignore codes that don't exist
-                if($sub[$judge1][$code_num]==NULL) {
-                break;
-                }
-                $excerpt_num = 'excerpt' . $i;
-
-                if((intval($sub[$judge1][$code_num])===intval($sub[$judge2][$code_num])) && (intval($sub[$judge1][$code_num])===1)) {
-                    $matches[$sub_num][$i] = [$sub[$judge1][$excerpt_num], $sub[$judge2][$excerpt_num]];
-                } else if(intval($sub[$judge1][$code_num])===1) {
-                    $review_set[$sub_num][$i] = $sub[$judge1][$excerpt_num];
-                } else if(intval($sub[$judge2][$code_num])===1) {
-                    $review_set[$sub_num][$i] = $sub[$judge2][$excerpt_num];
-                }
-            }
-        } else {
-            echo `Need ratings from both judges for subject {$sub_num}.`;
-        }
-    }
-
-    $s_args = array(
-        'post_type' => 'scenario',
-        'meta_key' => 'task_num',
-        'meta_value' => $task_num
-    );
-
-    $scenario = get_posts($s_args);
-    $s_content = trim($scenario[0]->post_content, '""');
-    $s_title = $scenario[0]->post_title;
-
-    $c_args = array(
-        'post_type' => 'competency',
-        'meta_key' => 'comp_num',
-        'meta_value' => $comp_num
-    );
-
-    $competencies = get_posts($c_args);
-    foreach ($competencies as $competency) {
-        $j = get_field('comp_part',$competency->ID);
-        if($j==0) {
-            $code_scheme = get_field('code_scheme',$competency->ID);
-        }
-        $c_defs[$j] = trim($competency->post_content, '""');
-        $c_titles[$j] = $competency->post_title;
-    }
-
-    $code_args = array(
-        'numberposts' => -1,
-        'post_type' => 'code',
-        'meta_key' => 'comp_num',
-        'meta_value' => $comp_num
-    );
-
-    $codes = get_posts($code_args);
-    foreach($codes as $code) {
-        $j = get_field('code_num',$code->ID);
-        $code_labels[$j] = wp_strip_all_tags($code->post_content);
-    }
-    $num_codes = count($codes);
-
-    $data_for_js = array(
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('gcaa_scores_nonce'),
-        'sContent' => $s_content,
-        'sTitle' => $s_title,
-        'cDefinitions' => $c_defs,
-        'cTitles' => $c_titles,
-        'respIds' => $resp_ids,
-        'responses' => $resp_contents,
-        'subNums' => $sub_nums,
-        'reviewSet' => $review_set,
-        'matches' => $matches,
-        'codeLabels' => $code_labels,
-        'numCodes' => $num_codes,
-        'judges' => [$judge1,$judge2],
-        'codeScheme' => $code_scheme,
-        'judge1Comments' => $judge1_comments,
-        'judge2Comments' => $judge2_comments
-    );
     return $data_for_js;
 }
 
 /*
  * The class which defines the generic functions for working with the database
  */
-class ARCJudgDB {
+class PracJudgDB {
     static $primary_key = 'id';
 
     // Private methods

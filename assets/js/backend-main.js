@@ -9,7 +9,7 @@
             dataType : 'json',
             url : arc_globals.ajax_url,
             data : {
-                action: 'gcac_do_export',
+                action: 'gcpc_do_export',
                 comp_num,
                 _ajax_nonce: arc_globals.nonce
             },
