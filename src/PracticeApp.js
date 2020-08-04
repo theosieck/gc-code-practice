@@ -22,7 +22,9 @@ class PracticeApp extends Component {
         trial: 1,   // Each judgment is one trial
         expId: expObj.expIds[0],   // The ID of the Exemplar being judged
         startTime: Math.floor(this.startDate / 1000),    // UNIX time on page load, in seconds
-        allDone: false // Whether the 'ShowEnd' component should be displayed
+        allDone: false, // Whether the 'ShowEnd' component should be displayed
+				numCorrect: 0,
+				totalMatches: 0
     };
 		// Labels for Response judgments
     levelTitles = {
@@ -38,6 +40,24 @@ class PracticeApp extends Component {
      * Fires: when the user clicks the 'Next' button
      */
     handleNext = (excerpts,codes,correctCodes,missedCodes,falsePositives) => {
+			const endDate = Date.now();
+			const endTime = Math.floor(endDate / 1000);
+			const judgTime = endTime - this.state.startTime;
+
+			let codesArray = []
+			let correctCodesArray = []
+			for(let i=1;i<=numCodes;i++) {
+					codesArray[i] = [codes[i],excerpts[i]]
+					if(correctCodes.includes(i)) {
+						correctCodesArray.push(i)
+					}
+			}
+
+			this.setState((prevState) => ({
+				numCorrect:prevState.numCorrect + correctCodesArray.length,
+				totalMatches:prevState.totalMatches + correctCodesArray.length + missedCodes.length + falsePositives.length
+			}))
+
         // Check whether the user has finished all the trials
         if (this.state.trial < nTrials) {
             this.setState((prevState) => ({
@@ -49,19 +69,6 @@ class PracticeApp extends Component {
             this.setState(() => ({
                 allDone: true
             }));
-        }
-
-        const endDate = Date.now();
-        const endTime = Math.floor(endDate / 1000);
-        const judgTime = endTime - this.state.startTime;
-
-        let codesArray = []
-				let correctCodesArray = []
-        for(let i=1;i<=numCodes;i++) {
-            codesArray[i] = [codes[i],excerpts[i]]
-						if(correctCodes.includes(i)) {
-							correctCodesArray.push(i)
-						}
         }
 
         var dataObj = {
@@ -152,7 +159,12 @@ class PracticeApp extends Component {
     render() {
         return (
             <div>
-                { this.state.allDone && <ShowEnd />}
+                { this.state.allDone &&
+									<ShowEnd
+										numCorrect={this.state.numCorrect}
+										total={this.state.totalMatches}
+									/>
+								}
                 {!this.state.allDone &&
 									<div>
                     <PresentContext
