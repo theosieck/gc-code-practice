@@ -7,7 +7,6 @@
  * Add columns to admin post list
  */
 function gcpc_exemplar_columns($defaults) {
-		$defaults['project'] = 'Project';
     $defaults['comp_num'] = 'Competency Number';
     $defaults['task_num'] = 'Scenario ID';
     $defaults['sub_num'] = 'Participant ID';

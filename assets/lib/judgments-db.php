@@ -5,27 +5,26 @@
 global $db_version;
 $db_version = '1.0';
 
-global $code_table_postfix;
-$code_table_postfix = 'gc_prac_code';
+global $prac_table_postfix;
+$prac_table_postfix = 'gc_prac_code';
 
 // this function is called in the main plugin file, because otherwise it doesn't work.
 /*
- * Creates the table "wp_gc_apply_codes" in the database.
+ * Creates the table "wp_gc_prac_code" in the database.
  */
 function gcpc_create_table() {
     global $wpdb;
     global $db_version;
-    global $code_table_postfix;
+    global $prac_table_postfix;
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-    $arc_table_name = $wpdb->prefix . $code_table_postfix;
+    $arc_table_name = $wpdb->prefix . $prac_table_postfix;
 
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE $arc_table_name (
         judg_id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id mediumint(9) UNSIGNED NOT NULL,
-				project tinytext NOT NULL,
         sub_num smallint(5) UNSIGNED NOT NULL,
 				comp_num smallint(2) UNSIGNED NOT NULL,
 				task_num smallint(2) UNSIGNED NOT NULL,
@@ -85,11 +84,6 @@ function gcpc_pull_data_cpts($comp_num, $task_num) {
 					array(
 						'key' => 'task_num',
 						'value' => $task_num,
-						'compare' => '=',
-					),
-					array(
-						'key' => 'project',
-						'value' => $gc_project,
 						'compare' => '=',
 					),
 				),
@@ -191,8 +185,8 @@ class PracJudgDB {
      */
     private static function _table() {
         global $wpdb;
-        global $code_table_postfix;
-        return $wpdb->prefix . $code_table_postfix;
+        global $prac_table_postfix;
+        return $wpdb->prefix . $prac_table_postfix;
     }
 
     /*

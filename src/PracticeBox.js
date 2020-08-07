@@ -98,19 +98,19 @@ class PracticeBox extends Component {
 			const missedCodes = [];
 			const falsePositives = [];
 			this.state.codes.forEach((code,index) => {
-				if(code) {
-					// learner selected
-					if(this.props.goldCodes.includes(index.toString())) {
-						correctCodes.push(index)
+				if(index>0 && index<this.props.codes.length) {
+					if(code) {
+						// learner selected
+						if(this.props.goldCodes.includes(index.toString())) {
+							correctCodes.push(index);
+						} else {
+							falsePositives.push(index)
+						}
 					} else {
-						falsePositives.push(index)
-					}
-				} else {
-					// learner did not select
-					if(this.props.goldCodes.includes(index.toString())) {
-						missedCodes.push(index)
-					} else {
-						correctCodes.push(index)
+						// learner did not select
+						if(this.props.goldCodes.includes(index.toString())) {
+							missedCodes.push(index)
+						}
 					}
 				}
 			});

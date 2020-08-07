@@ -80,7 +80,6 @@ add_action('wp_ajax_save_prac_data','save_prac_data');
 function save_prac_data() {
     check_ajax_referer('gcpc_scores_nonce');
     global $current_user;
-		global $gc_project;
 
     $db = new PracJudgDB;
 
@@ -107,7 +106,6 @@ function save_prac_data() {
 
     $db_data = array(
         'user_id' => $current_user->ID,
-				'project' => $gc_project,
         'sub_num' => $sub_num,
         'comp_num' => $comp_num,
         'task_num' => $task_num,
