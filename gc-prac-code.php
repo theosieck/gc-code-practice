@@ -1,7 +1,7 @@
 <?php
 /*
    Plugin Name: GC Code Practice
-   Version: 0.1
+   Version: 0.2
    Author: Global Cognition
    Author URI: https://www.globalcognition.org
    Description: Serve up exemplars for feature coding
