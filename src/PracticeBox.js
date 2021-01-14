@@ -12,7 +12,7 @@ class PracticeBox extends Component {
 		let codes = [];
 		let excerpts = [];
 		let rows = [];
-		for(let i=1;i<10;i++) {
+		for(let i=1;i<16;i++) {
 			const codeNum = parseInt(results[`code${i}`])
 			codes[i] = codeNum
 			excerpts[i] = results[`excerpt${i}`]
@@ -37,8 +37,8 @@ class PracticeBox extends Component {
     state = this.props.resultsObj ? this.genState() : {
         rows:[],
         activeSelect:'',
-        codes:[0,0,0,0,0,0,0,0,0,0],
-        excerpts:['','','','','','','','','',''],
+        codes:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        excerpts:['','','','','','','','','','','','','','',''],
 				feedback: false,
 				correctCodes:[],
 				missedCodes:[],
@@ -51,7 +51,7 @@ class PracticeBox extends Component {
 
     handleCodeButton = (code) => {
         if(code) {
-            const codeKey = code[0]
+            const codeKey = isNaN(code[1]) ? code[0] : code[0]+code[1]
             const selection = this.state.activeSelect ? this.state.activeSelect : 'No selection'
             this.setState((prevState) => ({
                 rows: prevState.rows.filter((row) => row.code != code).concat({
@@ -84,11 +84,12 @@ class PracticeBox extends Component {
         e.preventDefault()
 				console.log("deleting...")
         const code = e.target.id
+				const codeKey = isNaN(code[1]) ? code[0] : code[0]+code[1]
 				console.log(code)
         this.setState((prevState) => ({
-            rows: prevState.rows.filter((row) => row.code[0] != code),
-            excerpts: prevState.excerpts.map((excerpt,i) => i == code ? '' : excerpt),
-            codes: prevState.codes.map((num,i) => i == code ? 0 : num)
+            rows: prevState.rows.filter((row) => row.code != code),
+            excerpts: prevState.excerpts.map((excerpt,i) => i == codeKey ? '' : excerpt),
+            codes: prevState.codes.map((num,i) => i == codeKey ? 0 : num)
         }))
     }
 
@@ -122,8 +123,8 @@ class PracticeBox extends Component {
         this.setState(() => ({
             rows:[],
             activeSelect:'',
-            codes:[0,0,0,0,0,0,0,0,0],
-            excerpts:['','','','','','','','',''],
+            codes:[0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            excerpts:['','','','','','','','','','','','','',''],
 						feedback: false,
 						correctCodes:[],
 						missedCodes:[],

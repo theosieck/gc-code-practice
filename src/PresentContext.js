@@ -39,7 +39,7 @@ function PresentContext(props) {
             </ExpansionPanel>
             <ExpansionPanel>
                 <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography className={classes.heading}>Comp {props.cTitle}</Typography>
+                    <Typography className={classes.heading}>Comp Domain {props.cTitles[0]}</Typography>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
@@ -49,7 +49,7 @@ function PresentContext(props) {
             </ExpansionPanel>
             <ExpansionPanel>
                 <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography className={classes.heading}>{props.levelTitles[3]}</Typography>
+                    <Typography className={classes.heading}>Comp {props.cTitles[3]}</Typography>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
@@ -59,7 +59,7 @@ function PresentContext(props) {
             </ExpansionPanel>
             <ExpansionPanel>
                 <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography className={classes.heading}>{props.levelTitles[2]}</Typography>
+                    <Typography className={classes.heading}>Comp {props.cTitles[2]}</Typography>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>
@@ -69,7 +69,7 @@ function PresentContext(props) {
             </ExpansionPanel>
             <ExpansionPanel>
                 <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography className={classes.heading}>{props.levelTitles[1]}</Typography>
+                    <Typography className={classes.heading}>Comp {props.cTitles[1]}</Typography>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Typography className={classes.heading}>

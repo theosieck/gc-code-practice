@@ -26,12 +26,6 @@ class PracticeApp extends Component {
 				numCorrect: 0,
 				totalMatches: 0
     };
-		// Labels for Response judgments
-    levelTitles = {
-        1: "Less Skilled",
-        2: "Proficient",
-        3: "Master"
-    };
 
     /**
      * handleNext: checks whether the user is finished with the current set, saves the current line to
@@ -170,9 +164,8 @@ class PracticeApp extends Component {
                     <PresentContext
                         scenario={expObj.sContent}
                         competencies={expObj.cDefinitions}
-                        levelTitles={this.levelTitles}
                         sTitle={expObj.sTitle}
-                        cTitle={expObj.cTitles[0]}
+                        cTitles={expObj.cTitles}
                     />
 										<PracticeBox
                         expId={ this.state.expId }

@@ -40,6 +40,12 @@ function gcpc_create_table() {
         code7 smallint(1) UNSIGNED NOT NULL,
         code8 smallint(1) UNSIGNED,
         code9 smallint(1) UNSIGNED,
+				code10 smallint(1) UNSIGNED,
+				code11 smallint(1) UNSIGNED,
+        code12 smallint(1) UNSIGNED,
+        code13 smallint(1) UNSIGNED,
+        code14 smallint(1) UNSIGNED,
+        code15 smallint(1) UNSIGNED,
         excerpt1 longtext,
         excerpt2 longtext,
         excerpt3 longtext,
@@ -49,6 +55,12 @@ function gcpc_create_table() {
         excerpt7 longtext,
         excerpt8 longtext,
         excerpt9 longtext,
+				excerpt10 longtext,
+				excerpt11 longtext,
+        excerpt12 longtext,
+        excerpt13 longtext,
+        excerpt14 longtext,
+        excerpt15 longtext,
 				correct_codes longtext,
 				missed_codes longtext,
 				false_positives longtext,
@@ -73,20 +85,20 @@ function gcpc_pull_data_cpts($comp_num, $task_num) {
 
 		// set up meta query
 		$meta_query = array(
-				'relation' => 'AND',
-				array(
-						'key' => 'comp_num',
-						'value' => $comp_num,
-						'compare' => '=',
-				),
-				array(
-					'relation' => 'AND',
+				// 'relation' => 'AND',
+				// array(
+				// 		'key' => 'comp_num',
+				// 		'value' => $comp_num,
+				// 		'compare' => '=',
+				// ),
+				// array(
+				// 	'relation' => 'AND',
 					array(
 						'key' => 'task_num',
 						'value' => $task_num,
 						'compare' => '=',
 					),
-				),
+				// ),
 			);
 
 		$exp_args = array(
