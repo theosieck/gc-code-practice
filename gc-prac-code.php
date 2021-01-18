@@ -112,40 +112,21 @@ function save_prac_data() {
         'exp_title' => $title,
         'judg_time'  => $judg_time,
         'code_scheme' => $code_scheme,
-        'code1' => $codes[1][0],
-        'excerpt1' => $codes[1][1],
-        'code2' => $codes[2][0],
-        'excerpt2' => $codes[2][1],
-        'code3' => $codes[3][0],
-        'excerpt3' => $codes[3][1],
-        'code4' => $codes[4][0],
-        'excerpt4' => $codes[4][1],
-        'code5' => $codes[5][0],
-        'excerpt5' => $codes[5][1],
-        'code6' => $codes[6][0],
-        'excerpt6' => $codes[6][1],
-        'code7' => $codes[7][0],
-        'excerpt7' => $codes[7][1],
-        'code8' => $codes[8][0],
-        'excerpt8' => $codes[8][1],
-        'code9' => $codes[9][0],
-        'excerpt9' => $codes[9][1],
-				'code10' => $codes[10][0],
-        'excerpt10' => $codes[10][1],
-				'code11' => $codes[11][0],
-        'excerpt11' => $codes[11][1],
-        'code12' => $codes[12][0],
-        'excerpt12' => $codes[12][1],
-        'code13' => $codes[13][0],
-        'excerpt13' => $codes[13][1],
-        'code14' => $codes[14][0],
-        'excerpt14' => $codes[14][1],
-        'code15' => $codes[15][0],
-        'excerpt15' => $codes[15][1],
 				'correct_codes' => implode(',',$correct_codes),
 				'missed_codes' => implode(',',$missed_codes),
 				'false_positives' => implode(',',$false_positives)
     );
+
+		unset($codes[0]);	// there is no code 0
+		$code_data = array();
+		$i = 1;
+		foreach($codes as $code) {
+			$code_data["code{$i}"] = $code[0];
+			$code_data["excerpt{$i}"] = $code[1];
+			$i++;
+		}
+
+		$db_data = array_merge($db_data,$code_data);
 
     $success = $db->insert($db_data);
     if($success) {
