@@ -123,6 +123,7 @@ function gcpc_pull_data_cpts($comp_num, $task_num) {
         $sub_nums[] = $sub_num ? $sub_num : get_field('sub_num', $exp_id);
         $exp_contents[$exp_id] = trim($exemplar->post_content, '""');
 				$gold_codes[$exp_id] = get_field('gold_codes',$exp_id);
+				$gold_excerpts[$exp_id] = get_field('gold_excerpts',$exp_id);
     }
 
     $s_args = array(
@@ -176,6 +177,7 @@ function gcpc_pull_data_cpts($comp_num, $task_num) {
         'expIds' => $exp_ids,
         'exemplars' => $exp_contents,
 				'goldCodes' => $gold_codes,
+				'goldExcerpts' => $gold_excerpts,
         'subNums' => $sub_nums,
         'codeLabels' => $code_labels,
         'numCodes' => $num_codes,

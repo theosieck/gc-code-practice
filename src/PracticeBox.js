@@ -28,8 +28,8 @@ class PracticeBox extends Component {
 			codes,
 			excerpts,
 			feedback: false,
-			correctCodes:[],
-			missedCodes:[],
+			correctRows:[],
+			missedRows:[],
 			falsePositives:[]
 		}
 	}
@@ -40,8 +40,8 @@ class PracticeBox extends Component {
         codes:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         excerpts:['','','','','','','','','','','','','','',''],
 				feedback: false,
-				correctCodes:[],
-				missedCodes:[],
+				correctRows:[],
+				missedRows:[],
 				falsePositives:[]
     }
 
@@ -95,27 +95,48 @@ class PracticeBox extends Component {
 
 		handleSubmit = (e) => {
 			e.preventDefault();
-			const correctCodes = [];
-			const missedCodes = [];
+
+			// sort excerpts into an array where each index is the code for the excerpt
+			const allExcerpts = [];
+			this.props.goldExcerpts.split("\r\n").forEach((excerpt) => {
+				const excerptArray = excerpt.split("- ");
+				allExcerpts[excerptArray[0]] = excerptArray[1];
+			})
+			// console.log(allExcerpts);
+
+			// sort codes into correct, missed, and false positives
+			const correctRows = [];
+			const missedRows = [];
 			const falsePositives = [];
+			// console.log(this.props.codes)
 			this.state.codes.forEach((code,index) => {
 				if(index>0 && index<this.props.codes.length) {
 					if(code) {
 						// learner selected
 						if(this.props.goldCodes.includes(index.toString())) {
-							correctCodes.push(index);
+							correctRows.push({
+									'text':allExcerpts[index],
+									'code':index + ". " + this.props.codes[index]
+							})
+							// correctRows.push(index);
 						} else {
 							falsePositives.push(index)
 						}
 					} else {
 						// learner did not select
 						if(this.props.goldCodes.includes(index.toString())) {
-							missedCodes.push(index)
+							missedRows.push({
+									'text':allExcerpts[index],
+									'code':index + ". " + this.props.codes[index]
+							})
 						}
 					}
 				}
 			});
-			this.setState(() => ({feedback:true,correctCodes,missedCodes,falsePositives}));
+
+			// console.log(correctRows);
+
+			this.setState(() => ({feedback:true,correctRows,missedRows,falsePositives}));
 		}
 
     handleNext = (e) => {
@@ -126,12 +147,22 @@ class PracticeBox extends Component {
             codes:[0,0,0,0,0,0,0,0,0,0,0,0,0,0],
             excerpts:['','','','','','','','','','','','','',''],
 						feedback: false,
-						correctCodes:[],
-						missedCodes:[],
+						correctRows:[],
+						missedRows:[],
 						falsePositives:[]
         }))
-        this.props.handleNext(this.state.excerpts,this.state.codes,this.state.correctCodes,this.state.missedCodes,this.state.falsePositives);
+
+        this.props.handleNext(this.state.excerpts,this.state.codes,this.getCodeNums(this.state.correctRows),this.getCodeNums(this.state.missedRows),this.state.falsePositives);
     }
+
+		getCodeNums = (rows) => {
+			let codeNums = [];
+			rows.forEach((row) => {
+				const code = row.code
+				codeNums.push(parseInt(isNaN(code[1]) ? code[0] : code[0]+code[1]))
+			});
+			return codeNums;
+		}
 
     render() {
         return (
@@ -164,8 +195,8 @@ class PracticeBox extends Component {
                 {!this.state.feedback && <button style={{marginTop:"10px"}} onClick={this.handleSubmit}>Submit</button>}
 								{this.state.feedback &&
 									<ShowFeedback
-										correctCodes={this.state.correctCodes}
-										missedCodes={this.state.missedCodes}
+										correctRows={this.state.correctRows}
+										missedRows={this.state.missedRows}
 										falsePositives={this.state.falsePositives}
 										codeLabels={this.props.codes}
 										handleNext={this.handleNext}

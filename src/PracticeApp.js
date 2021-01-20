@@ -38,6 +38,8 @@ class PracticeApp extends Component {
 			const endTime = Math.floor(endDate / 1000);
 			const judgTime = endTime - this.state.startTime;
 
+			console.log(correctCodes);
+
 			let codesArray = []
 			let correctCodesArray = []
 			for(let i=1;i<=numCodes;i++) {
@@ -173,6 +175,7 @@ class PracticeApp extends Component {
                         codes={codes}
                         handleNext={this.handleNext}
 												goldCodes={expObj.goldCodes[this.state.expId]}
+												goldExcerpts={expObj.goldExcerpts[this.state.expId]}
                     />
 									</div>
                 }
