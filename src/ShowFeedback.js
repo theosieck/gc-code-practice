@@ -11,13 +11,15 @@ const ShowFeedback = (props) => {
 					return (<p>{code}. {codeLabel}</p>)
 				}
 			})}*/}
-			{props.correctRows.length>0 && props.correctRows.map((row) => (
-	        <Row
-	            selection={row.text}
-	            code={row.code}
-	            showDelete={false}
-	        />
-	    ))}
+			{props.correctRows.length>0 && props.correctRows.map((row) => {
+				if (row.code!=='') {
+					return (<Row
+						selection={row.text}
+						code={row.code}
+						showDelete={false}
+					/>)
+				} else return <p>{row.text}</p>
+			})}
 			{props.correctRows.length<=0 && <p>No codes to show.</p>}
 
 			<h2>Missed Codes:</h2>
